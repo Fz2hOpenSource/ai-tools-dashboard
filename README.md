@@ -1,208 +1,174 @@
 ![cc-lens CLI](./public/cc-lens.png)
 
-# Claude Code Lens (cc-lens)
+# Claude Code Lens (cc-lens) — Terminal Observatory 增强版
 
-Local analytics dashboard for Claude Code. No cloud, no telemetry, no API key, just your `~/.claude/` data, visualized.
-
-```bash
-npx cc-lens
-```
-
-The CLI finds a free local port, starts the dashboard, and opens it in your browser.
-
-## Quick Start
-
-Run directly with `npx`:
+Claude Code 本地使用数据分析仪表盘。无需云端、不上传数据、不需要 API Key，直接读取 `~/.claude/` 目录，可视化展示你的 AI 使用情况。
 
 ```bash
 npx cc-lens
 ```
 
-On first run, `cc-lens` prepares a small runtime cache in `~/.cc-lens/`. After that, launches are faster.
+CLI 会自动找一个空闲端口，启动仪表盘并在浏览器打开。
 
-## What You Can See
+---
 
-### Overview
+## 📌 项目来源
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./public/dashboard-dark.png" />
-  <source media="(prefers-color-scheme: light)" srcset="./public/dashboard-white.png" />
-  <img alt="Dashboard overview" src="./public/dashboard-dark.png" />
-</picture>
+本项目基于 **[Arindam200/cc-lens](https://github.com/Arindam200/cc-lens)**（v0.3.3）进行深度优化，原作者 **Arindam Majumder**。
 
-- Sessions, messages, token usage, estimated cost, and local storage.
-- Trend cards with sparklines.
-- Date presets for 7, 30, and 90 days, plus a custom date range picker.
-- Usage over time, model distribution, peak hours, project activity, token breakdown, and recent sessions.
+在此基础上做了以下增强：
 
-### Projects
+### 🎨 视觉升级 — Terminal Observatory 主题
+- 深空蓝黑底色 + 琥珀色暖光氛围
+- 全屏噪点纹理（CRT 观测镜头质感）
+- 卡片渐变背景、hover 发光边缘、斜向光扫动画
+- 页面加载 stagger 渐进淡入（StatCard → Chart → Table）
+- 暗色/亮色双主题，`prefers-reduced-motion` 无障碍支持
 
-![Projects](./public/projects.png)
+### ✂️ 代码优化
+- 统一模型名显示：4 处硬编码 if-else 收敛为 `modelDisplayName()` / `modelShortId()`
+- 合并冗余循环：projects/route.ts 9 次 reduce → 1 次 for；stats/route.ts 2 次遍历 → 1 次
+- Session 页：筛选器改为圆角药丸按钮 + lucide 图标；行点击即进入详情
+- SessionBadges 组件：emoji → lucide 图标，配置化驱动渲染
+- 删除 TopBar 的 Star on GitHub 按钮，界面更干净
+- SWR 轮询间隔 5s → 30s，减少不必要的文件扫描
 
-- Searchable, sortable project grid.
-- Per-project cards with sessions, duration, estimated cost, languages, git branches, MCP/agent badges, and top tools.
-- Project detail pages with sessions, cost over time, language distribution, branch activity, and tool usage.
+---
 
-### Sessions
+## 快速开始
 
-![Session replay and chat](./public/session-chat.png)
-
-- Searchable session table with badges for compaction, agents, MCP, web search/fetch, and extended thinking.
-- Full session replay reconstructed from JSONL.
-- Assistant responses rendered as GitHub-flavored Markdown.
-- Tool calls and tool results shown inline.
-- File read/write/update tool results parsed into readable cards.
-- Per-turn model, duration, token breakdown, and estimated cost.
-- Compaction events shown in context with a token accumulation chart.
-
-### Costs
-
-![Costs](./public/costs.png)
-
-- Total estimated cost, cache savings, and estimated cost without cache.
-- Cost over time and cost by project.
-- Per-model token and cost breakdown.
-- Cache efficiency panel.
-- Pricing reference from `lib/pricing.ts`.
-
-### Tools & Features
-![Tools & features](./public/tools.png)
-
-- Tool ranking across all sessions.
-- Tool categories for file I/O, shell, agents, web, planning, todos, skills, MCP, and other calls.
-- MCP server usage details.
-- Feature adoption across sessions.
-- Tool error analysis.
-- Claude Code version history.
-- Git branch analytics.
-
-### Activity
-
-![Activity calendar](./public/activity.png)
-
-- GitHub-style activity calendar.
-- Current streak, longest streak, active days, and most active day.
-- Usage over time, peak hours, and day-of-week patterns.
-- Activity can be derived from session JSONL when the stats cache is incomplete.
-
-### Local Claude Code Files
-
-![Todos](./public/todos.png)
-
-- **History**: Search and page through `~/.claude/history.jsonl`.
-- **Todos**: Browse todos from `~/.claude/todos/` with search and status filters.
-- **Plans**: Read saved plans from `~/.claude/plans/` with inline Markdown rendering.
-- **Memory**: Browse and edit memory files across projects, with type filters and stale detection.
-- **Settings**: Inspect `~/.claude/settings.json`, installed skills, plugins, MCP servers, and storage usage.
-
-### Export & Import
-
-![Export](./public/export.png)
-
-- Export a portable `.cclens.json` file containing stats, session metadata, facets, and recent command history.
-- Preview export counts before downloading.
-- Optionally filter exports by session start date.
-- Drop an export file to preview an additive merge from another machine.
-
-Import is intentionally preview-only right now. It shows which sessions are new or already present, but it does not write merged data back into `~/.claude/`, to avoid corrupting live Claude Code files.
-
-## Navigation
-
-![Global search (Command K)](./public/command-k.png)
-
-- Global search: `Cmd+K`, `Ctrl+K`, or `/`.
-- Session list keyboard navigation: `j` / `k` to move, `Enter` to open, `Esc` to clear.
-- Page shortcuts: `g` plus a page key, for example `g s` for sessions, `g p` for projects, `g c` for costs.
-- Responsive layout with desktop sidebar, collapsible navigation, mobile bottom nav, and mobile menu.
-- Light and dark themes.
-
-## Multiple Claude Profiles
-
-By default, `cc-lens` reads `~/.claude/`. To point it at another Claude Code config directory, set `CLAUDE_CONFIG_DIR`:
+直接用 npx 运行（Node.js 18+）：
 
 ```bash
-# Default profile
 npx cc-lens
+```
 
-# Work profile
+首次运行会在 `~/.cc-lens/` 下生成缓存，之后启动更快。
+
+---
+
+## 功能一览
+
+### 📊 总览
+- 会话数、消息数、Token 用量、预估费用、本地存储大小
+- 带迷你趋势图的统计卡片
+- 7/30/90 天预设 + 自定义日期范围
+- 用量趋势、模型分布、高峰时段、项目活跃度、Token 分类、最近会话
+
+### 📁 项目
+- 可搜索、可排序的项目网格
+- 每个项目卡片展示会话数、时长、预估费用、语言、Git 分支、MCP/Agent 标记、常用工具
+- 项目详情页含成本趋势、语言分布、分支活跃度、工具用量
+
+### 💬 会话
+- 搜索 + 筛选（Compaction / Agent / MCP）+ 排序
+- 从 JSONL 还原完整会话回放
+- Assistant 回复渲染为 GFM Markdown
+- 内联展示工具调用和工具结果
+- 文件读写工具结果解析为可读卡片
+- 每轮对话的模型、耗时、Token 明细、预估费用
+- Compaction 事件上下文 + Token 累积图
+
+### 💰 成本
+- 总预估费用、缓存节省、无缓存对比
+- 按时间和按项目拆分成本
+- 按模型 Token/成本明细表
+- 缓存命中率面板
+- 定价参考表（支持 `~/.cc-lens/pricing.json` 自定义）
+
+### 🔧 工具 & 功能
+- 全会话工具排行榜
+- 工具分类统计（文件 I/O / Shell / Agent / Web / 规划 / Todo / Skill / MCP）
+- MCP Server 用量详情
+- 功能采纳率
+- 工具错误分析
+- Claude Code 版本历史
+
+### 📅 活跃度
+- GitHub 风格活跃日历
+- 连续天数、最长连续、活跃天数、最活跃日
+- 按小时、按星期分布
+
+### 📂 本地文件浏览
+- **历史记录**：搜索 `~/.claude/history.jsonl`
+- **待办事项**：浏览 `~/.claude/todos/`
+- **计划文件**：浏览 `~/.claude/plans/`
+- **记忆文件**：跨项目浏览和编辑 Memory
+- **设置**：查看 settings.json、Skills、Plugins、MCP Server、存储用量
+
+### 📤 导出 & 导入
+- 导出 `.cclens.json`（含统计、会话元数据、Facets、历史记录）
+- 下载前预览导出数量
+- 支持按日期过滤
+- 拖入导出文件可预览跨机器合并（预览模式，不写回 `~/.claude/`）
+
+---
+
+## 导航
+
+- 全局搜索：`Cmd+K` / `Ctrl+K` / `/`
+- 会话列表键盘导航：`j` / `k` 移动，`Enter` 打开，`Esc` 清除
+- 页面快捷键：`g s` 会话，`g p` 项目，`g c` 成本
+- 响应式布局：桌面侧栏 + 可折叠 + 手机底部导航
+- 明暗双主题
+
+---
+
+## 多配置目录
+
+默认读取 `~/.claude/`，可通过环境变量切换：
+
+```bash
 CLAUDE_CONFIG_DIR=~/.claude-work npx cc-lens
 ```
 
-On Windows PowerShell:
+Windows PowerShell:
 
 ```powershell
 $env:CLAUDE_CONFIG_DIR="C:\Users\you\.claude-work"; npx cc-lens
 ```
 
-The active config directory is shown in the CLI banner on launch.
+---
 
-## Run From Source
-
-### Prerequisites
-
-- Node.js 18+
-- Claude Code with local data in `~/.claude/`
-
-### Development
+## 从源码运行
 
 ```bash
 npm install
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000), or the port shown in your terminal.
-
-### Production Build
-
-```bash
-npm run build
+npm run dev          # 开发模式 → http://localhost:3000
+npm run build        # 生产构建
 npm start
 ```
 
-### Lint
+---
 
-```bash
-npm run lint
-```
+## 数据来源
 
-## Project Docs
+`cc-lens` 直接读取以下本地文件：
 
-- [Roadmap](./docs/ROADMAP.md): planned improvements and non-goals.
-- [Known limitations](./docs/LIMITATIONS.md): accuracy, compatibility, and runtime caveats.
-- [Compatibility](./docs/COMPATIBILITY.md): supported local files and reporting guidance.
-- [Contributing](./docs/CONTRIBUTING.md): local setup, PR expectations, and manual test notes.
-- [Privacy](./docs/PRIVACY.md): what data is read, exported, or edited.
-- [Security](./docs/SECURITY.md): private vulnerability reporting and review checklist.
+- `~/.claude/projects/<slug>/*.jsonl` — 会话数据 & 回放
+- `~/.claude/stats-cache.json` — 聚合统计
+- `~/.claude/usage-data/session-meta/` — 会话元数据（回退）
+- `~/.claude/history.jsonl` — 命令历史
+- `~/.claude/todos/` — 待办事项
+- `~/.claude/plans/` — 计划文件
+- `~/.claude/projects/*/memory/` — 项目记忆
+- `~/.claude/settings.json` — 设置、Skills、Plugins、MCP
 
-## Data Sources
+---
 
-`cc-lens` reads local Claude Code files directly:
+## 隐私
 
-- `~/.claude/projects/<slug>/*.jsonl`: session JSONL and replay data
-- `~/.claude/stats-cache.json`: aggregate stats when available
-- `~/.claude/usage-data/session-meta/`: session metadata fallback
-- `~/.claude/history.jsonl`: command history
-- `~/.claude/todos/`: todo files
-- `~/.claude/plans/`: saved plan files
-- `~/.claude/projects/*/memory/`: project memory files
-- `~/.claude/settings.json`: settings, skills, plugins, and MCP config
+完全本地运行，不联网、不登录、不上传数据。你的 Claude Code 使用记录始终留在你的电脑上。
 
-Dashboard data refreshes every 5 seconds while the app is open.
+---
 
-## Privacy
+## 费用估算说明
 
-Claude Code Lens runs locally and reads files from your machine. It does not require a login, API key, hosted backend, or telemetry service. Your Claude Code history stays on your computer.
+Claude Code 存储的是 Token 计数和模型标识，不含账单数据。`cc-lens` 基于 `lib/pricing.ts` 中的定价表进行估算。若官方定价调整，可编辑该文件或创建 `~/.cc-lens/pricing.json` 覆盖。
 
-## Cost Estimates
+---
 
-Claude Code stores token counts and model identifiers, not final billing totals. `cc-lens` estimates cost using the pricing table in `lib/pricing.ts`. If provider pricing changes, update that file to keep estimates current.
+## 致谢
 
-## Star History
-
-<a href="https://www.star-history.com/?repos=Arindam200%2Fcc-lens&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Arindam200/cc-lens&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Arindam200/cc-lens&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Arindam200/cc-lens&type=date&legend=top-left" />
- </picture>
-</a>
+- 原作者 **[Arindam Majumder](https://github.com/Arindam200)** — [cc-lens](https://github.com/Arindam200/cc-lens)
+- 视觉设计 & 代码优化由 **[Fz2hOpenSource](https://github.com/Fz2hOpenSource)** 贡献
