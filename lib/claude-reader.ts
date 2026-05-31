@@ -250,7 +250,15 @@ async function parseSessionFile(filePath: string, sessionId: string): Promise<Pa
  * fields (slug_name, cc_version, git_branch, has_compaction, has_thinking) so
  * callers don't need a separate second pass.
  */
+// Global result cache for getAllParsedSessions (1 minute TTL)
+let _allSessionsCache: { data: ParsedSession[]; time: number } | null = null
+
 export async function getAllParsedSessions(): Promise<ParsedSession[]> {
+  // Return cached result if fresh
+  if (_allSessionsCache && Date.now() - _allSessionsCache.time < 60_000) {
+    return _allSessionsCache.data
+  }
+
   let slugs: string[]
   try {
     slugs = await listProjectSlugs()
@@ -333,6 +341,7 @@ export async function getAllParsedSessions(): Promise<ParsedSession[]> {
   }
 
   results.sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
+  _allSessionsCache = { data: results, time: Date.now() }
   return results
 }
 

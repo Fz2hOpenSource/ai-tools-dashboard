@@ -12,12 +12,23 @@ export function getAvailableProviders(): ProviderInfo[] {
   return EXTERNAL_READERS.filter(r => r.info.available).map(r => r.info)
 }
 
-/** Merge sessions from all external readers (OpenClaw, Codex) into the main session list */
+// ── Result cache (5s TTL) — avoids re-parsing on every page navigation ──
+let cachedExternalSessions: ParsedSession[] | null = null
+let cachedExternalTime = 0
+const CACHE_TTL = 60_000 // 1 minute — sessions don't change mid-request
+
+/** Merge sessions from all external readers (OpenClaw, Codex). Cached for 5 seconds. */
 export async function getExternalSessions(): Promise<ParsedSession[]> {
+  const now = Date.now()
+  if (cachedExternalSessions && now - cachedExternalTime < CACHE_TTL) {
+    return cachedExternalSessions
+  }
   const results = await Promise.all(
     EXTERNAL_READERS.filter(r => r.info.available).map(r => r.getSessions())
   )
-  return results.flat()
+  cachedExternalSessions = results.flat()
+  cachedExternalTime = now
+  return cachedExternalSessions
 }
 
 export async function getExternalHistory(limit = 200): Promise<HistoryEntry[]> {

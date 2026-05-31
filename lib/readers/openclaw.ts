@@ -31,8 +31,19 @@ export const openclawInfo: ProviderInfo = {
   type: 'openclaw',
   label: 'OpenClaw',
   homeDir: HOME,
-  get available() { return _available ?? true }, // lazy, corrected on first check
+  get available() { return _available ?? true },
 }
+
+// ── Mtime-based session cache ──────────────────────────────────────────────
+// Re-parsing 114 JSONL files on every request is the dominant cost.
+// Cache parsed results keyed by file path + mtime.
+
+interface SessionCacheEntry {
+  mtimeMs: number
+  data: AnyRecord
+}
+
+const sessionResultCache = new Map<string, SessionCacheEntry>()
 
 /** Scan session JSONL files and extract metadata */
 async function listSessionFiles(): Promise<string[]> {
@@ -45,8 +56,29 @@ async function listSessionFiles(): Promise<string[]> {
   } catch { return [] }
 }
 
+/** Parse with mtime cache — skips re-parsing unchanged files */
+async function parseSessionFileCached(filePath: string): Promise<AnyRecord | null> {
+  try {
+    const stat = await fs.stat(filePath)
+    const cached = sessionResultCache.get(filePath)
+    if (cached && cached.mtimeMs === stat.mtimeMs) {
+      return cached.data
+    }
+    const data = await parseSessionFile(filePath, stat.mtimeMs)
+    if (data) {
+      sessionResultCache.set(filePath, { mtimeMs: stat.mtimeMs, data })
+      // Limit cache size to prevent memory leaks
+      if (sessionResultCache.size > 500) {
+        const oldest = sessionResultCache.keys().next().value
+        if (oldest) sessionResultCache.delete(oldest)
+      }
+    }
+    return data
+  } catch { return null }
+}
+
 /** Parse a single OpenClaw session JSONL into a ParsedSession */
-async function parseSessionFile(filePath: string): Promise<AnyRecord | null> {
+async function parseSessionFile(filePath: string, knownMtime?: number): Promise<AnyRecord | null> {
   try {
     const raw = await fs.readFile(filePath, 'utf-8')
     const lines = raw.split(/\r?\n/).filter(l => l.trim())
@@ -201,7 +233,7 @@ export const openclawReader: ProviderReader = {
   async getSessions() {
     if (!await detectAvailable()) return []
     const files = await listSessionFiles()
-    const results = await Promise.all(files.map(parseSessionFile))
+    const results = await Promise.all(files.map(parseSessionFileCached))
     return results.filter((s): s is AnyRecord => s !== null) as AnyRecord[]
   },
 
