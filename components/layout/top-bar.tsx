@@ -6,6 +6,7 @@ import { mutate } from 'swr'
 import { Search, RefreshCw, Menu, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSidebar } from '@/components/layout/sidebar-context'
+import { ProviderSelector } from '@/components/provider-selector'
 import { cn } from '@/lib/utils'
 
 interface TopBarProps {
@@ -79,6 +80,8 @@ export function TopBar({ title, subtitle, className }: TopBarProps) {
 
       {/* Right: actions */}
       <div className="flex items-center gap-2 shrink-0">
+        <ProviderSelector />
+
         {/* Search — desktop */}
         <Button
           variant="outline"

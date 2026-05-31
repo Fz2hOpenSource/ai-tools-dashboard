@@ -1,6 +1,7 @@
 import fs from 'fs/promises'
 import path from 'path'
 import os from 'os'
+import { getExternalSessions } from './readers/index'
 import type {
   StatsCache,
   SessionMeta,
@@ -26,6 +27,7 @@ export interface ParsedSession extends SessionMeta {
   git_branch?: string
   has_compaction: boolean
   has_thinking: boolean
+  _provider?: string  // 'claude' | 'openclaw' | 'codex'
 }
 
 interface CacheEntry {
@@ -315,6 +317,22 @@ export async function getAllParsedSessions(): Promise<ParsedSession[]> {
   }
 
   results.sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
+
+  // Tag as Claude Code sessions
+  for (const s of results) s._provider = 'claude'
+
+  // Merge external provider sessions (OpenClaw, Codex)
+  try {
+    const external = await getExternalSessions()
+    if (external.length > 0) {
+      console.log(`[cc-lens] Merged ${external.length} external sessions into ${results.length} claude sessions`)
+    }
+    for (const s of external) results.push(s as ParsedSession)
+  } catch (err) {
+    console.warn('[cc-lens] Could not load external sessions:', (err as Error).message)
+  }
+
+  results.sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
   return results
 }
 
@@ -323,7 +341,7 @@ export async function readSessionsFromProjectJSONL(): Promise<SessionMeta[]> {
   return getAllParsedSessions()
 }
 
-/** Get sessions: prefers JSONL (projects/*.jsonl), falls back to usage-data/session-meta */
+/** Get sessions: prefers JSONL (projects/*.jsonl), falls back to usage-data/session-meta. External providers already merged via getAllParsedSessions. */
 export async function getSessions(): Promise<SessionMeta[]> {
   const jsonl = await getAllParsedSessions()
   if (jsonl.length > 0) return jsonl
