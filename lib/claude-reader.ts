@@ -250,13 +250,30 @@ async function parseSessionFile(filePath: string, sessionId: string): Promise<Pa
  * fields (slug_name, cc_version, git_branch, has_compaction, has_thinking) so
  * callers don't need a separate second pass.
  */
-// Global result cache + in-flight dedup for getAllParsedSessions
+// Global result cache + in-flight dedup + disk persistence
 let _allSessionsCache: { data: ParsedSession[]; time: number } | null = null
 let _allSessionsPromise: Promise<ParsedSession[]> | null = null
-const RESULT_CACHE_TTL = 300_000 // 5 minutes — sessions don't change mid-session
+const RESULT_CACHE_TTL = 300_000
+const DISK_CACHE_PATH = path.join(os.tmpdir(), 'cc-lens-sessions-cache.json')
+
+async function loadDiskCache(): Promise<ParsedSession[] | null> {
+  try {
+    const raw = await fs.readFile(DISK_CACHE_PATH, 'utf-8')
+    const cached = JSON.parse(raw) as { time: number; data: ParsedSession[] }
+    // Disk cache is always valid — survives restarts. Refresh button clears it.
+    if (cached.data?.length > 0) return cached.data
+  } catch { /* no cache */ }
+  return null
+}
+
+async function saveDiskCache(data: ParsedSession[]) {
+  try {
+    await fs.writeFile(DISK_CACHE_PATH, JSON.stringify({ time: Date.now(), data }), 'utf-8')
+  } catch { /* best effort */ }
+}
 
 export async function getAllParsedSessions(): Promise<ParsedSession[]> {
-  // Return cached result if fresh
+  // Return in-memory cached result if fresh
   if (_allSessionsCache && Date.now() - _allSessionsCache.time < RESULT_CACHE_TTL) {
     return _allSessionsCache.data
   }
@@ -266,6 +283,13 @@ export async function getAllParsedSessions(): Promise<ParsedSession[]> {
 
   _allSessionsPromise = (async () => {
     try {
+    // Try disk cache first (survives server restarts)
+    const diskCached = await loadDiskCache()
+    if (diskCached) {
+      _allSessionsCache = { data: diskCached, time: Date.now() }
+      return diskCached
+    }
+
     let slugs: string[]
     try {
       slugs = await listProjectSlugs()
@@ -349,11 +373,18 @@ export async function getAllParsedSessions(): Promise<ParsedSession[]> {
 
     results.sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
     _allSessionsCache = { data: results, time: Date.now() }
+    saveDiskCache(results) // persist to survive server restarts
     return results
     } finally { _allSessionsPromise = null }
   })()
 
   return _allSessionsPromise
+}
+
+/** Clear all caches — called by Refresh button */
+export function clearSessionCache() {
+  _allSessionsCache = null
+  _allSessionsPromise = null
 }
 
 /** Derive session metadata directly from ~/.claude/projects/<project>/<session>.jsonl */
