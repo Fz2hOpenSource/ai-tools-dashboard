@@ -8,7 +8,7 @@ import { DayOfWeekChart } from '@/components/activity/day-of-week-chart'
 import { UsageOverTimeChart } from '@/components/overview/usage-over-time-chart'
 import type { DailyActivity } from '@/types/claude'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { SkeletonCard, StatSkeletonGrid } from '@/components/ui/skeleton-card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle, Flame, CalendarDays, BarChart3, Clock, Zap, TrendingUp, Star } from 'lucide-react'
 
@@ -77,16 +77,14 @@ export default function ActivityPage() {
 
         {isLoading && (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+            <StatSkeletonGrid count={4} />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-stretch">
+              <SkeletonCard variant="chart" className="h-72 md:min-h-80" />
+              <SkeletonCard variant="chart" className="h-56 md:min-h-80" />
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-stretch">
-              <Skeleton className="h-72 min-h-72 rounded-xl md:min-h-80" />
-              <Skeleton className="h-56 min-h-56 rounded-xl md:min-h-80" />
-            </div>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-stretch">
-              <Skeleton className="h-64 rounded-xl md:min-h-72" />
-              <Skeleton className="h-56 rounded-xl md:min-h-72" />
+              <SkeletonCard variant="chart" className="h-64 md:min-h-72" />
+              <SkeletonCard variant="chart" className="h-56 md:min-h-72" />
             </div>
           </>
         )}

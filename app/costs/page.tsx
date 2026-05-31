@@ -10,7 +10,7 @@ import { formatCost } from '@/lib/decode'
 import { PRICING } from '@/lib/pricing'
 import type { CostAnalytics } from '@/types/claude'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { SkeletonCard, StatSkeletonGrid } from '@/components/ui/skeleton-card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DollarSign, TrendingDown, Banknote } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -47,13 +47,9 @@ export default function CostsPage() {
         {/* ── Loading ── */}
         {isLoading && (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-28 rounded-xl bg-muted/30" style={{ animationDelay: `${i * 80}ms` }} />
-              ))}
-            </div>
+            <StatSkeletonGrid count={3} />
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-56 rounded-xl bg-muted/30" />
+              <SkeletonCard key={i} variant="chart" />
             ))}
           </div>
         )}

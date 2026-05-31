@@ -26,6 +26,25 @@ const DEFAULT_PRICING_PER_MTOK: Record<string, ModelPricing> = {
   'claude-haiku-4-5':  { input: 1.00, output:  5.00, cacheWrite: 1.25,  cacheRead: 0.10 },
   // Haiku 3.5 — retired, $0.80 / $4
   'claude-haiku-3-5':  { input: 0.80, output:  4.00, cacheWrite: 1.00,  cacheRead: 0.08 },
+
+  // ── Third-party models ──────────────────────────────────────────────────────
+
+  // DeepSeek V4-Pro — ¥3 / ¥6 per M tokens (permanent 75% discount as of 2026-06)
+  // Cache hit: ¥0.025/M ≈ $0.0035/M — one of the cheapest cache reads available
+  // Source: api-docs.deepseek.com
+  'deepseek-v4-pro':   { input: 0.42, output: 0.83, cacheWrite: 0, cacheRead: 0.0035 },
+
+  // MiniMax M2.7 — ¥2.1 / ¥8.4 per M tokens
+  // Source: platform.minimaxi.com
+  'MiniMax-M2.7':      { input: 0.30, output: 1.20, cacheWrite: 0.375, cacheRead: 0.06 },
+
+  // MiniMax M2.7 Highspeed — ¥4.2 / ¥16.8 per M tokens (2× standard)
+  'MiniMax-M2.7-highspeed': { input: 0.60, output: 2.40, cacheWrite: 0.375, cacheRead: 0.06 },
+
+  // GPT-5.5 — $5 / $30 per M tokens (released 2026-04-23)
+  // Cached input: $0.50/M
+  // Source: platform.openai.com
+  'gpt-5.5':           { input: 5.00, output: 30.00, cacheWrite: 6.25, cacheRead: 0.50 },
 }
 
 function toPerToken(p: ModelPricing): ModelPricing {

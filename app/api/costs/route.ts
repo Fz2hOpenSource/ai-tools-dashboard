@@ -9,44 +9,118 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   const [stats, sessions] = await Promise.all([readStatsCache(), getSessions()])
 
-  if (!stats) {
-    return NextResponse.json({ error: 'stats-cache.json not found' }, { status: 404 })
+  // If no sessions at all, return empty
+  if (!sessions || sessions.length === 0) {
+    return NextResponse.json({
+      total_cost: 0, total_savings: 0, models: [], daily: [], by_project: [],
+      _note: 'No Claude Code sessions found in ~/.claude/',
+    })
   }
 
   // ── Per-model breakdown ────────────────────────────────────────────────────
   let totalCost = 0
   let totalSavings = 0
-  const models: ModelCostBreakdown[] = Object.entries(stats.modelUsage ?? {}).map(([model, usage]) => {
-    const cost = estimateTotalCostFromModel(model, usage)
-    const eff = cacheEfficiency(model, usage)
-    totalCost += cost
-    totalSavings += eff.savedUSD
-    return {
-      model,
-      input_tokens: usage.inputTokens ?? 0,
-      output_tokens: usage.outputTokens ?? 0,
-      cache_write_tokens: usage.cacheCreationInputTokens ?? 0,
-      cache_read_tokens: usage.cacheReadInputTokens ?? 0,
-      estimated_cost: cost,
-      cache_savings: eff.savedUSD ?? 0,
-      cache_hit_rate: eff.hitRate ?? 0,
+  let models: ModelCostBreakdown[] = []
+
+  if (stats?.modelUsage) {
+    models = Object.entries(stats.modelUsage).map(([model, usage]) => {
+      const cost = estimateTotalCostFromModel(model, usage)
+      const eff = cacheEfficiency(model, usage)
+      totalCost += cost
+      totalSavings += eff.savedUSD
+      return {
+        model,
+        input_tokens: usage.inputTokens ?? 0,
+        output_tokens: usage.outputTokens ?? 0,
+        cache_write_tokens: usage.cacheCreationInputTokens ?? 0,
+        cache_read_tokens: usage.cacheReadInputTokens ?? 0,
+        estimated_cost: cost,
+        cache_savings: eff.savedUSD ?? 0,
+        cache_hit_rate: eff.hitRate ?? 0,
+      }
+    }).sort((a, b) => b.estimated_cost - a.estimated_cost)
+  } else {
+    // Fallback: aggregate model usage from session meta
+    const modelMap = new Map<string, { input: number; output: number; cacheWrite: number; cacheRead: number }>()
+    for (const s of sessions) {
+      const models = Object.keys(s.model_usage ?? {})
+      const primaryModel = models[0] ?? 'unknown'
+      const entry = modelMap.get(primaryModel) ?? { input: 0, output: 0, cacheWrite: 0, cacheRead: 0 }
+      entry.input += s.input_tokens ?? 0
+      entry.output += s.output_tokens ?? 0
+      entry.cacheWrite += s.cache_creation_input_tokens ?? 0
+      entry.cacheRead += s.cache_read_input_tokens ?? 0
+      modelMap.set(primaryModel, entry)
     }
-  }).sort((a, b) => b.estimated_cost - a.estimated_cost)
+    models = [...modelMap.entries()].map(([model, usage]) => {
+      const cost = estimateTotalCostFromModel(model, {
+        inputTokens: usage.input,
+        outputTokens: usage.output,
+        cacheCreationInputTokens: usage.cacheWrite,
+        cacheReadInputTokens: usage.cacheRead,
+        costUSD: 0,
+        webSearchRequests: 0,
+      })
+      const eff = cacheEfficiency(model, {
+        inputTokens: usage.input,
+        outputTokens: usage.output,
+        cacheCreationInputTokens: usage.cacheWrite,
+        cacheReadInputTokens: usage.cacheRead,
+        costUSD: 0,
+        webSearchRequests: 0,
+      })
+      totalCost += cost
+      totalSavings += eff.savedUSD
+      return {
+        model,
+        input_tokens: usage.input,
+        output_tokens: usage.output,
+        cache_write_tokens: usage.cacheWrite,
+        cache_read_tokens: usage.cacheRead,
+        estimated_cost: cost,
+        cache_savings: eff.savedUSD ?? 0,
+        cache_hit_rate: eff.hitRate ?? 0,
+      }
+    }).sort((a, b) => b.estimated_cost - a.estimated_cost)
+  }
 
   // ── Daily cost by model ────────────────────────────────────────────────────
-  // stats-cache.json uses "dailyModelTokens" in newer CC versions; "tokensByDate" in older ones
-  const daily: DailyCost[] = (stats.dailyModelTokens ?? stats.tokensByDate ?? []).map(d => {
-    const costs: Record<string, number> = {}
-    let dayTotal = 0
-    for (const [model, tokens] of Object.entries(d.tokensByModel ?? {})) {
-      const p = getPricing(model)
-      // tokensByDate only has total tokens, approximate as input+output split 50/50
-      const cost = tokens * p.input * 0.5 + tokens * p.output * 0.5
-      costs[model] = cost
-      dayTotal += cost
+  let daily: DailyCost[] = []
+
+  if (stats?.dailyModelTokens ?? stats?.tokensByDate) {
+    const raw = stats.dailyModelTokens ?? stats.tokensByDate ?? []
+    daily = raw.map(d => {
+      const costs: Record<string, number> = {}
+      let dayTotal = 0
+      for (const [model, tokens] of Object.entries(d.tokensByModel ?? {})) {
+        const p = getPricing(model)
+        const cost = tokens * p.input * 0.5 + tokens * p.output * 0.5
+        costs[model] = cost
+        dayTotal += cost
+      }
+      return { date: d.date, costs, total: dayTotal }
+    })
+  } else {
+    // Fallback: compute daily cost from sessions
+    const dailyMap = new Map<string, number>()
+    for (const s of sessions) {
+      const date = s.start_time?.slice(0, 10)
+      if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) continue
+      const primaryModel = Object.keys(s.model_usage ?? {})[0] ?? 'unknown'
+      const cost = estimateTotalCostFromModel(primaryModel, {
+        inputTokens: s.input_tokens ?? 0,
+        outputTokens: s.output_tokens ?? 0,
+        cacheCreationInputTokens: s.cache_creation_input_tokens ?? 0,
+        cacheReadInputTokens: s.cache_read_input_tokens ?? 0,
+        costUSD: 0,
+        webSearchRequests: 0,
+      })
+      dailyMap.set(date, (dailyMap.get(date) ?? 0) + cost)
     }
-    return { date: d.date, costs, total: dayTotal }
-  })
+    daily = [...dailyMap.entries()]
+      .map(([date, total]) => ({ date, costs: {} as Record<string, number>, total }))
+      .sort((a, b) => a.date.localeCompare(b.date))
+  }
 
   // ── Cost by project ────────────────────────────────────────────────────────
   const projectMap = new Map<string, { cost: number; input: number; output: number }>()

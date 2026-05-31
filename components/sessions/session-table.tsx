@@ -4,9 +4,11 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { SessionBadges } from './session-badges'
-import { Search, Zap, Bot, Plug } from 'lucide-react'
+import { Search, Zap, Bot, Plug, Star } from 'lucide-react'
 import { formatCost, formatDuration, formatDate, projectDisplayName } from '@/lib/decode'
 import { cn } from '@/lib/utils'
+import { isBookmarked, toggleBookmark as toggleBookmarkStorage } from '@/lib/bookmarks'
+import { useToast } from '@/lib/toast'
 import type { SessionWithFacet } from '@/types/claude'
 
 const PAGE_SIZE = 25
@@ -48,16 +50,33 @@ export function SessionTable({ sessions }: Props) {
   const [filterCompacted, setFilterCompacted] = useState(false)
   const [filterAgent, setFilterAgent] = useState(false)
   const [filterMcp, setFilterMcp] = useState(false)
+  const [filterStarred, setFilterStarred] = useState(false)
   const [search, setSearch] = useState('')
   const [focusedIdx, setFocusedIdx] = useState<number | null>(null)
+  const [bookmarks, setBookmarks] = useState<string[]>([])
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([])
   const router = useRouter()
+  const { toast } = useToast()
+
+  // Load bookmarks from localStorage on mount
+  useEffect(() => {
+    setBookmarks(isBookmarked('') ? [] : [])
+    // Initialize from storage directly
+    try {
+      const raw = localStorage.getItem('cc-lens-bookmarks')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) setBookmarks(parsed)
+      }
+    } catch { /* ignore */ }
+  }, [])
 
   const filtered = useMemo(() => {
     let s = sessions
     if (filterCompacted) s = s.filter(x => x.has_compaction)
     if (filterAgent)     s = s.filter(x => x.uses_task_agent)
     if (filterMcp)       s = s.filter(x => x.uses_mcp)
+    if (filterStarred)   s = s.filter(x => bookmarks.includes(x.session_id!))
     if (search) {
       const q = search.toLowerCase()
       s = s.filter(x =>
@@ -67,7 +86,7 @@ export function SessionTable({ sessions }: Props) {
       )
     }
     return s
-  }, [sessions, filterCompacted, filterAgent, filterMcp, search])
+  }, [sessions, filterCompacted, filterAgent, filterMcp, filterStarred, search, bookmarks])
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
@@ -130,6 +149,19 @@ export function SessionTable({ sessions }: Props) {
     setFocusedIdx(null)
   }
 
+  function handleBookmarkToggle(sessionId: string, e: React.MouseEvent) {
+    e.stopPropagation()
+    const nowBookmarked = toggleBookmarkStorage(sessionId)
+    setBookmarks(prev => {
+      if (nowBookmarked) return [...prev, sessionId]
+      return prev.filter(id => id !== sessionId)
+    })
+    toast({
+      title: nowBookmarked ? 'Session starred' : 'Session unstarred',
+      variant: nowBookmarked ? 'success' : 'default',
+    })
+  }
+
   const FilterPill = ({ active, onToggle, icon, label }: { active: boolean; onToggle: () => void; icon: React.ReactNode; label: string }) => (
     <button
       onClick={onToggle}
@@ -163,6 +195,7 @@ export function SessionTable({ sessions }: Props) {
           <FilterPill active={filterCompacted} onToggle={() => { setFilterCompacted(v => !v); setPage(1); setFocusedIdx(null) }} icon={<Zap className="w-3 h-3" />} label="Compact" />
           <FilterPill active={filterAgent}     onToggle={() => { setFilterAgent(v => !v); setPage(1); setFocusedIdx(null) }}     icon={<Bot className="w-3 h-3" />} label="Agent" />
           <FilterPill active={filterMcp}       onToggle={() => { setFilterMcp(v => !v); setPage(1); setFocusedIdx(null) }}       icon={<Plug className="w-3 h-3" />} label="MCP" />
+          <FilterPill active={filterStarred}   onToggle={() => { setFilterStarred(v => !v); setPage(1); setFocusedIdx(null) }}   icon={<Star className="w-3 h-3" />} label="Starred" />
         </div>
         <span className="ml-auto text-[12px] text-muted-foreground/50 font-mono tabular-nums">
           {filtered.length} session{filtered.length !== 1 ? 's' : ''}
@@ -175,6 +208,7 @@ export function SessionTable({ sessions }: Props) {
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-border/60 bg-muted/30">
+                <th className="px-2 py-2.5 w-8" />
                 <th className="px-4 py-2.5 text-left"><SortHeader label="Date" k="start_time" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} /></th>
                 <th className="px-4 py-2.5 text-left"><span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">Project</span></th>
                 <th className="px-4 py-2.5 text-right"><SortHeader label="Dur" k="duration_minutes" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} /></th>
@@ -200,6 +234,22 @@ export function SessionTable({ sessions }: Props) {
                     )}
                     onClick={() => router.push(`/sessions/${s.session_id}`)}
                   >
+                    <td className="px-2 py-2.5">
+                      <button
+                        onClick={(e) => handleBookmarkToggle(s.session_id!, e)}
+                        className="p-0.5 rounded hover:bg-muted/50 transition-colors cursor-pointer"
+                        aria-label={bookmarks.includes(s.session_id!) ? 'Unstar session' : 'Star session'}
+                      >
+                        <Star
+                          className={cn(
+                            'w-3.5 h-3.5 transition-all duration-200',
+                            bookmarks.includes(s.session_id!)
+                              ? 'fill-amber-400 text-amber-400 drop-shadow-[0_0_4px_rgba(245,158,11,0.5)]'
+                              : 'text-muted-foreground/20 group-hover:text-muted-foreground/40',
+                          )}
+                        />
+                      </button>
+                    </td>
                     <td className="px-4 py-2.5 font-mono text-muted-foreground whitespace-nowrap text-[12px]">
                       {formatDate(s.start_time)}
                     </td>

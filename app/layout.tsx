@@ -7,6 +7,8 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { KeyboardNavProvider } from '@/components/keyboard-nav-provider'
 import { SidebarProvider } from '@/components/layout/sidebar-context'
 import { ClientLayout } from '@/components/layout/client-layout'
+import { ToastProvider } from '@/lib/toast'
+import { Toaster } from '@/components/ui/toaster'
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
@@ -34,14 +36,17 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning className={`${geistMono.variable} ${pressStart2P.variable} antialiased`}>
         <ThemeProvider>
-          <SidebarProvider>
-            <div className="flex min-h-screen">
-              <Sidebar />
-              <ClientLayout>{children}</ClientLayout>
-            </div>
-            <BottomNav />
-            <KeyboardNavProvider />
-          </SidebarProvider>
+          <ToastProvider>
+            <SidebarProvider>
+              <div className="flex min-h-screen">
+                <Sidebar />
+                <ClientLayout>{children}</ClientLayout>
+              </div>
+              <BottomNav />
+              <KeyboardNavProvider />
+            </SidebarProvider>
+            <Toaster />
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -6,7 +6,7 @@ import { TopBar } from '@/components/layout/top-bar'
 import { ProjectCard } from '@/components/projects/project-card'
 import type { ProjectSummary } from '@/types/claude'
 import { Input } from '@/components/ui/input'
-import { Skeleton } from '@/components/ui/skeleton'
+import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Search, AlertTriangle, ArrowUpDown } from 'lucide-react'
@@ -89,7 +89,7 @@ export default function ProjectsPage() {
 
         {isLoading && (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}
+            {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} variant="stat" className="h-48" />)}
           </div>
         )}
 

@@ -1,6 +1,8 @@
 'use client'
 
 import { useSidebar } from '@/components/layout/sidebar-context'
+import { PageTransition } from '@/components/page-transition'
+import { BackToTop } from '@/components/back-to-top'
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const { collapsed } = useSidebar()
@@ -12,7 +14,9 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         collapsed ? 'md:ml-14' : 'md:ml-56',
       ].join(' ')}
     >
-      {children}
+      <PageTransition>{children}</PageTransition>
+
+      <BackToTop />
 
       {/* ── Footer ── */}
       <footer className="border-t border-border/30 py-3 px-6 flex items-center justify-center gap-2 mb-16 md:mb-0">

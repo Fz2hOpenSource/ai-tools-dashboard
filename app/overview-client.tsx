@@ -13,7 +13,7 @@ import { formatTokens, formatBytes } from '@/lib/decode'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Skeleton } from '@/components/ui/skeleton'
+import { SkeletonCard, StatSkeletonGrid } from '@/components/ui/skeleton-card'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import type { StatsCache, DailyActivity, DailyTokens } from '@/types/claude'
@@ -140,19 +140,15 @@ export function OverviewClient() {
       <div className="px-6 py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <Skeleton className="h-7 w-32 bg-muted/50 rounded-lg" />
-            <Skeleton className="h-4 w-56 bg-muted/30 rounded-lg" />
+            <div className="h-7 w-32 rounded-lg bg-muted/50 animate-pulse" />
+            <div className="h-4 w-56 rounded-lg bg-muted/30 animate-pulse" />
           </div>
-          <Skeleton className="h-9 w-48 bg-muted/50 rounded-lg" />
+          <div className="h-9 w-48 rounded-lg bg-muted/50 animate-pulse" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-32 rounded-xl bg-muted/30" />
-          ))}
-        </div>
+        <StatSkeletonGrid count={4} />
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-          <Skeleton className="h-72 rounded-xl bg-muted/30" />
-          <Skeleton className="h-72 rounded-xl bg-muted/30" />
+          <SkeletonCard variant="chart" />
+          <SkeletonCard variant="chart" />
         </div>
       </div>
     )

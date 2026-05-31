@@ -9,7 +9,7 @@ import { VersionHistoryTable } from '@/components/tools/version-history-table'
 import { CATEGORY_COLORS, CATEGORY_LABELS } from '@/lib/tool-categories'
 import type { ToolsAnalytics } from '@/types/claude'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { SkeletonCard, StatSkeletonGrid } from '@/components/ui/skeleton-card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { AlertTriangle, Wrench, Server, Zap, GitBranch } from 'lucide-react'
@@ -34,10 +34,10 @@ export default function ToolsPage() {
 
         {isLoading && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
-            </div>
-            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}
+            <StatSkeletonGrid count={4} />
+            {Array.from({ length: 3 }).map((_, i) => (
+              <SkeletonCard key={i} variant="chart" />
+            ))}
           </div>
         )}
 

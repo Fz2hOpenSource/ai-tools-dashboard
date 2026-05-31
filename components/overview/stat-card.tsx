@@ -5,11 +5,13 @@ import { LineChart, Line, ResponsiveContainer } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useTheme } from '@/components/theme-provider'
+import { AnimatedCounter } from '@/components/ui/animated-counter'
 import { cn } from '@/lib/utils'
 
 interface StatCardProps {
   title: string
   value: string
+  numericValue?: number
   description?: string
   trend?: number
   sparkData?: number[]
@@ -33,7 +35,7 @@ const TREND_COLORS = {
   down: { light: '#dc2626', dark: '#f87171' },
 }
 
-export function StatCard({ title, value, description, trend, sparkData, accentColor }: StatCardProps) {
+export function StatCard({ title, value, numericValue, description, trend, sparkData, accentColor }: StatCardProps) {
   const { theme } = useTheme()
   const resolvedAccent = resolveChartColor(accentColor, theme)
   const hasTrend = trend !== undefined && !isNaN(trend)
@@ -59,7 +61,11 @@ export function StatCard({ title, value, description, trend, sparkData, accentCo
             className="text-3xl font-bold tabular-nums leading-none tracking-tight"
             style={{ color: resolvedAccent }}
           >
-            {value}
+            {numericValue !== undefined ? (
+              <AnimatedCounter value={numericValue} className="tabular-nums" />
+            ) : (
+              value
+            )}
           </CardTitle>
           {hasTrend && (
             <Badge

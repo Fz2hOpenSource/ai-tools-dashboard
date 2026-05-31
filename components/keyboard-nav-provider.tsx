@@ -2,6 +2,7 @@
 
 import { GlobalSearch } from './global-search'
 import { useGlobalKeyboardNav } from './use-global-keyboard-nav'
+import KeyboardHelp from './keyboard-help'
 
 function GModeIndicator() {
   const gMode = useGlobalKeyboardNav()
@@ -17,6 +18,7 @@ export function KeyboardNavProvider() {
   return (
     <>
       <GlobalSearch />
+      <KeyboardHelp />
       <GModeIndicator />
     </>
   )

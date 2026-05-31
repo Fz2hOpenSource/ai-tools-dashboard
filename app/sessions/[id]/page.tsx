@@ -1,6 +1,6 @@
 'use client'
 
-import { use } from 'react'
+import { use, useState, useEffect } from 'react'
 import useSWR from 'swr'
 import { TopBar } from '@/components/layout/top-bar'
 import { SessionSidebar } from '@/components/sessions/replay/session-sidebar'
@@ -12,7 +12,10 @@ import type { ReplayData, SessionWithFacet } from '@/types/claude'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertTriangle, MessageSquare, Coins, DollarSign, Clock, Zap } from 'lucide-react'
+import { AlertTriangle, MessageSquare, Coins, DollarSign, Clock, Zap, Star } from 'lucide-react'
+import { isBookmarked, toggleBookmark as toggleBookmarkStorage } from '@/lib/bookmarks'
+import { useToast } from '@/lib/toast'
+import { cn } from '@/lib/utils'
 
 const fetcher = (url: string) =>
   fetch(url).then(r => { if (!r.ok) throw new Error(`API error ${r.status}`); return r.json() })
@@ -29,6 +32,19 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
     useSWR<{ session: SessionWithFacet }>(`/api/sessions/${id}`, fetcher)
 
   const meta = metaData?.session
+  const { toast } = useToast()
+  const [bookmarked, setBookmarked] = useState(isBookmarked(id))
+  // bookmark sync on mount
+  useEffect(() => { setBookmarked(isBookmarked(id)) }, [id])
+
+  function handleBookmarkToggle() {
+    const nowBookmarked = toggleBookmarkStorage(id)
+    setBookmarked(nowBookmarked)
+    toast({
+      title: nowBookmarked ? 'Session starred' : 'Session unstarred',
+      variant: nowBookmarked ? 'success' : 'default',
+    })
+  }
 
   if (replayError) {
     return (
@@ -102,6 +118,24 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
 
       {/* Stats cards — match project detail page */}
       <div className="border-b border-border bg-muted/30 px-4 py-4 md:px-6">
+        {/* Bookmark toggle */}
+        <button
+          onClick={handleBookmarkToggle}
+          className={cn(
+            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-medium transition-all duration-200 border mb-4 cursor-pointer',
+            bookmarked
+              ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+              : 'bg-muted/40 border-border/50 text-muted-foreground hover:bg-muted hover:border-border',
+          )}
+        >
+          <Star
+            className={cn(
+              'w-3.5 h-3.5 transition-all',
+              bookmarked && 'fill-amber-400 drop-shadow-[0_0_4px_rgba(245,158,11,0.5)]',
+            )}
+          />
+          {bookmarked ? 'Starred' : 'Star session'}
+        </button>
         <div
           className={
             3 + (meta ? 1 : 0) + (replay.compactions.length > 0 ? 1 : 0) >= 5

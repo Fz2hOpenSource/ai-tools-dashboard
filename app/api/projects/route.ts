@@ -68,7 +68,8 @@ export async function GET() {
     }
 
     const estimatedCost = sessionList.reduce((sum, s) => {
-      return sum + estimateCostFromUsage('claude-opus-4-7', {
+      const primaryModel = Object.keys(s.model_usage ?? {})[0] ?? 'unknown'
+      return sum + estimateCostFromUsage(primaryModel, {
         input_tokens: s.input_tokens ?? 0,
         output_tokens: s.output_tokens ?? 0,
         cache_creation_input_tokens: s.cache_creation_input_tokens ?? 0,
