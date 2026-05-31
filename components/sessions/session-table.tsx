@@ -9,6 +9,7 @@ import { formatCost, formatDuration, formatDate, projectDisplayName } from '@/li
 import { cn } from '@/lib/utils'
 import { isBookmarked, toggleBookmark as toggleBookmarkStorage } from '@/lib/bookmarks'
 import { useToast } from '@/lib/toast'
+import { useI18n } from '@/lib/i18n'
 import type { SessionWithFacet } from '@/types/claude'
 
 const PAGE_SIZE = 25
@@ -57,6 +58,7 @@ export function SessionTable({ sessions }: Props) {
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([])
   const router = useRouter()
   const { toast } = useToast()
+  const { t } = useI18n()
 
   // Load bookmarks from localStorage on mount
   useEffect(() => {
@@ -157,7 +159,7 @@ export function SessionTable({ sessions }: Props) {
       return prev.filter(id => id !== sessionId)
     })
     toast({
-      title: nowBookmarked ? 'Session starred' : 'Session unstarred',
+      title: nowBookmarked ? t('toast.starred') : t('toast.unstarred'),
       variant: nowBookmarked ? 'success' : 'default',
     })
   }
@@ -185,20 +187,20 @@ export function SessionTable({ sessions }: Props) {
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40 pointer-events-none" />
           <input
             type="text"
-            placeholder="Search sessions..."
+            placeholder={t('sessions.search')}
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); setFocusedIdx(null) }}
             className="bg-muted/50 border border-border/60 rounded-lg pl-8 pr-3 py-1.5 text-[13px] text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 focus:bg-muted transition-colors w-52"
           />
         </div>
         <div className="flex items-center gap-1.5">
-          <FilterPill active={filterCompacted} onToggle={() => { setFilterCompacted(v => !v); setPage(1); setFocusedIdx(null) }} icon={<Zap className="w-3 h-3" />} label="Compact" />
-          <FilterPill active={filterAgent}     onToggle={() => { setFilterAgent(v => !v); setPage(1); setFocusedIdx(null) }}     icon={<Bot className="w-3 h-3" />} label="Agent" />
-          <FilterPill active={filterMcp}       onToggle={() => { setFilterMcp(v => !v); setPage(1); setFocusedIdx(null) }}       icon={<Plug className="w-3 h-3" />} label="MCP" />
-          <FilterPill active={filterStarred}   onToggle={() => { setFilterStarred(v => !v); setPage(1); setFocusedIdx(null) }}   icon={<Star className="w-3 h-3" />} label="Starred" />
+          <FilterPill active={filterCompacted} onToggle={() => { setFilterCompacted(v => !v); setPage(1); setFocusedIdx(null) }} icon={<Zap className="w-3 h-3" />} label={t('filter.compact')} />
+          <FilterPill active={filterAgent}     onToggle={() => { setFilterAgent(v => !v); setPage(1); setFocusedIdx(null) }}     icon={<Bot className="w-3 h-3" />} label={t('filter.agent')} />
+          <FilterPill active={filterMcp}       onToggle={() => { setFilterMcp(v => !v); setPage(1); setFocusedIdx(null) }}       icon={<Plug className="w-3 h-3" />} label={t('filter.mcp')} />
+          <FilterPill active={filterStarred}   onToggle={() => { setFilterStarred(v => !v); setPage(1); setFocusedIdx(null) }}   icon={<Star className="w-3 h-3" />} label={t('filter.starred')} />
         </div>
         <span className="ml-auto text-[12px] text-muted-foreground/50 font-mono tabular-nums">
-          {filtered.length} session{filtered.length !== 1 ? 's' : ''}
+          {filtered.length} {t('sessions.sessions')}
         </span>
       </div>
 
@@ -209,13 +211,13 @@ export function SessionTable({ sessions }: Props) {
             <thead>
               <tr className="border-b border-border/60 bg-muted/30">
                 <th className="px-2 py-2.5 w-8" />
-                <th className="px-4 py-2.5 text-left"><SortHeader label="Date" k="start_time" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} /></th>
-                <th className="px-4 py-2.5 text-left"><span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">Project</span></th>
-                <th className="px-4 py-2.5 text-right"><SortHeader label="Dur" k="duration_minutes" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} /></th>
-                <th className="px-4 py-2.5 text-right"><SortHeader label="Msgs" k="total_messages" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} /></th>
-                <th className="px-4 py-2.5 text-right"><SortHeader label="Tools" k="tool_calls" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} /></th>
-                <th className="px-4 py-2.5 text-right"><SortHeader label="Cost" k="estimated_cost" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} /></th>
-                <th className="px-4 py-2.5 text-left min-w-[120px]"><span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">Flags</span></th>
+                <th className="px-4 py-2.5 text-left"><SortHeader label={t('sort.date')} k="start_time" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} /></th>
+                <th className="px-4 py-2.5 text-left"><span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">{t('sort.project')}</span></th>
+                <th className="px-4 py-2.5 text-right"><SortHeader label={t('sort.duration')} k="duration_minutes" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} /></th>
+                <th className="px-4 py-2.5 text-right"><SortHeader label={t('sort.messages')} k="total_messages" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} /></th>
+                <th className="px-4 py-2.5 text-right"><SortHeader label={t('sort.tools')} k="tool_calls" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} /></th>
+                <th className="px-4 py-2.5 text-right"><SortHeader label={t('sort.cost')} k="estimated_cost" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} /></th>
+                <th className="px-4 py-2.5 text-left min-w-[120px]"><span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">{t('sessions.flags')}</span></th>
               </tr>
             </thead>
             <tbody>
@@ -291,7 +293,7 @@ export function SessionTable({ sessions }: Props) {
               {paginated.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground/30 text-[13px]">
-                    No sessions match filters
+                    {t('sessions.no_results')}
                   </td>
                 </tr>
               )}
@@ -304,7 +306,7 @@ export function SessionTable({ sessions }: Props) {
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-[13px]">
           <span className="text-muted-foreground/50 text-[12px]">
-            Page {page} / {totalPages} · {sorted.length} sessions
+            {t('sessions.page')} {page} / {totalPages} · {sorted.length} {t('sessions.sessions')}
           </span>
           <div className="flex gap-1">
             <button

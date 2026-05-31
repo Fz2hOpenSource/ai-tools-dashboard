@@ -4,58 +4,62 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Keyboard, Navigation, Search, List, Command } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { useI18n } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
-/* ── Shortcut data ── */
+/* ── Shortcut data (actions are i18n keys) ── */
 interface ShortcutGroup {
   id: string
-  title: string
+  titleKey: string
   icon: React.ElementType
-  shortcuts: { keys: string[]; action: string }[]
+  shortcuts: { keys: string[]; actionKey: string }[]
 }
 
-const GROUPS: ShortcutGroup[] = [
-  {
-    id: 'navigation',
-    title: 'Navigation',
-    icon: Navigation,
-    shortcuts: [
-      { keys: ['g', 's'], action: 'Sessions' },
-      { keys: ['g', 'p'], action: 'Projects' },
-      { keys: ['g', 'c'], action: 'Costs' },
-      { keys: ['g', 't'], action: 'Tools' },
-      { keys: ['g', 'a'], action: 'Activity' },
-      { keys: ['g', 'm'], action: 'Memory' },
-      { keys: ['g', 'e'], action: 'Export' },
-      { keys: ['g', 'l'], action: 'Plans' },
-      { keys: ['g', 'y'], action: 'History' },
-      { keys: ['g', 'o'], action: 'Todos' },
-      { keys: ['g', 'h'], action: 'Overview' },
-    ],
-  },
-  {
-    id: 'search',
-    title: 'Search & Commands',
-    icon: Search,
-    shortcuts: [
-      { keys: ['/'], action: 'Quick search' },
-      { keys: ['⌘', 'K'], action: 'Command palette' },
-      { keys: ['?'], action: 'Keyboard help' },
-      { keys: ['Esc'], action: 'Close / cancel' },
-    ],
-  },
-  {
-    id: 'sessions',
-    title: 'Session List',
-    icon: List,
-    shortcuts: [
-      { keys: ['j'], action: 'Move down' },
-      { keys: ['k'], action: 'Move up' },
-      { keys: ['↵'], action: 'Open selected' },
-      { keys: ['Esc'], action: 'Clear selection' },
-    ],
-  },
-]
+function useShortcutGroups() {
+  const { t } = useI18n()
+  return [
+    {
+      id: 'navigation',
+      titleKey: 'kbd.navigation',
+      icon: Navigation,
+      shortcuts: [
+        { keys: ['g', 's'], actionKey: 'nav.sessions' },
+        { keys: ['g', 'p'], actionKey: 'nav.projects' },
+        { keys: ['g', 'c'], actionKey: 'nav.costs' },
+        { keys: ['g', 't'], actionKey: 'nav.tools' },
+        { keys: ['g', 'a'], actionKey: 'nav.activity' },
+        { keys: ['g', 'm'], actionKey: 'nav.memory' },
+        { keys: ['g', 'e'], actionKey: 'nav.export' },
+        { keys: ['g', 'l'], actionKey: 'nav.plans' },
+        { keys: ['g', 'y'], actionKey: 'nav.history' },
+        { keys: ['g', 'o'], actionKey: 'nav.todos' },
+        { keys: ['g', 'h'], actionKey: 'nav.overview' },
+      ],
+    },
+    {
+      id: 'search',
+      titleKey: 'kbd.search_commands',
+      icon: Search,
+      shortcuts: [
+        { keys: ['/'], actionKey: 'kbd.quick_search' },
+        { keys: ['⌘', 'K'], actionKey: 'kbd.command_palette' },
+        { keys: ['?'], actionKey: 'kbd.keyboard_help' },
+        { keys: ['Esc'], actionKey: 'kbd.close_cancel' },
+      ],
+    },
+    {
+      id: 'sessions',
+      titleKey: 'kbd.session_list',
+      icon: List,
+      shortcuts: [
+        { keys: ['j'], actionKey: 'kbd.move_down' },
+        { keys: ['k'], actionKey: 'kbd.move_up' },
+        { keys: ['↵'], actionKey: 'kbd.open_selected' },
+        { keys: ['Esc'], actionKey: 'kbd.clear_selection' },
+      ],
+    },
+  ]
+}
 
 /* ── Key pill sub-component ── */
 function KeyPill({ label, amber }: { label: string; amber?: boolean }) {
@@ -81,7 +85,7 @@ function KeyPillSpacer() {
 }
 
 /* ── Shortcut row ── */
-function ShortcutRow({ keys, action }: { keys: string[]; action: string }) {
+function ShortcutRow({ keys, actionLabel }: { keys: string[]; actionLabel: string }) {
   return (
     <motion.div
       variants={{
@@ -91,7 +95,7 @@ function ShortcutRow({ keys, action }: { keys: string[]; action: string }) {
       className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/30 transition-colors duration-150 group"
     >
       <span className="text-sm text-foreground/80 group-hover:text-foreground transition-colors">
-        {action}
+        {actionLabel}
       </span>
       <span className="inline-flex items-center gap-0.5">
         {keys.map((key, i) => (
@@ -109,9 +113,11 @@ function ShortcutRow({ keys, action }: { keys: string[]; action: string }) {
 function ShortcutGroupCard({
   group,
   index,
+  t,
 }: {
-  group: ShortcutGroup
+  group: ReturnType<typeof useShortcutGroups>[number]
   index: number
+  t: (k: string) => string
 }) {
   const Icon = group.icon
   return (
@@ -132,13 +138,13 @@ function ShortcutGroupCard({
         <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20">
           <Icon className="w-3.5 h-3.5 text-amber-400" />
         </div>
-        <h3 className="text-sm font-semibold text-foreground tracking-tight">{group.title}</h3>
+        <h3 className="text-sm font-semibold text-foreground tracking-tight">{t(group.titleKey)}</h3>
       </div>
 
       {/* Shortcuts */}
       <div className="px-2 py-2 divide-y divide-border/10">
         {group.shortcuts.map((s, i) => (
-          <ShortcutRow key={i} keys={s.keys} action={s.action} />
+          <ShortcutRow key={i} keys={s.keys} actionLabel={t(s.actionKey)} />
         ))}
       </div>
     </motion.div>
@@ -147,6 +153,8 @@ function ShortcutGroupCard({
 
 /* ── Main component ── */
 export default function KeyboardHelp() {
+  const { t } = useI18n()
+  const GROUPS = useShortcutGroups()
   const [open, setOpen] = useState(false)
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -205,10 +213,10 @@ export default function KeyboardHelp() {
             </div>
             <div>
               <DialogTitle className="text-base font-semibold text-foreground tracking-tight">
-                Keyboard Shortcuts
+                {t('kbd.title')}
               </DialogTitle>
               <p className="text-[11px] text-muted-foreground/60 mt-0.5 font-mono">
-                Press <KeyPill label="?" amber /> to toggle
+                {t('kbd.toggle_hint')} <KeyPill label="?" amber />
               </p>
             </div>
           </div>
@@ -231,7 +239,7 @@ export default function KeyboardHelp() {
         >
           {GROUPS.map((group, i) => (
             <div key={group.id} className={group.id === 'navigation' ? 'md:col-span-2' : ''}>
-              <ShortcutGroupCard group={group} index={i} />
+              <ShortcutGroupCard group={group} index={i} t={t} />
             </div>
           ))}
         </motion.div>

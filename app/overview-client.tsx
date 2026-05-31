@@ -20,6 +20,7 @@ import type { StatsCache, DailyActivity, DailyTokens } from '@/types/claude'
 import type { SessionWithFacet, ProjectSummary } from '@/types/claude'
 import { format, subDays } from 'date-fns'
 import { useTheme } from '@/components/theme-provider'
+import { useI18n } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -101,6 +102,7 @@ function Stagger({ index, children }: { index: number; children: React.ReactNode
 
 export function OverviewClient() {
   const { theme } = useTheme()
+  const { t } = useI18n()
   const [datePreset, setDatePreset] = useState<DatePreset>('30d')
   const [customRange, setCustomRange] = useState<CustomRange>({})
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -192,12 +194,12 @@ export function OverviewClient() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-foreground">
-              Overview
+              {t('nav.overview')}
             </h2>
             <p className="text-sm text-muted-foreground mt-0.5 font-mono">
-              <span className="text-primary/70">{projectCount}</span> projects{' '}
+              <span className="text-primary/70">{projectCount}</span> {t('overview.projects')}{' '}
               <span className="text-muted-foreground/30">·</span>{' '}
-              {formatBytes(computed.storageBytes)} stored
+              {formatBytes(computed.storageBytes)} {t('overview.stored')}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -247,7 +249,7 @@ export function OverviewClient() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
-            title: 'Sessions',
+            title: t('overview.sessions'),
             value: computed.sessionCount.toLocaleString(),
             description: `${computed.sessionsThisMonth} this month · ${computed.sessionsThisWeek} this week`,
             trend: computeTrend(stats.dailyActivity, 'sessionCount', trendWindow),
@@ -256,7 +258,7 @@ export function OverviewClient() {
             index: 1,
           },
           {
-            title: 'Messages',
+            title: t('overview.messages'),
             value: stats.totalMessages.toLocaleString(),
             description: `${computed.activeDays} active days`,
             trend: computeTrend(stats.dailyActivity, 'messageCount', trendWindow),
@@ -265,7 +267,7 @@ export function OverviewClient() {
             index: 2,
           },
           {
-            title: 'Tokens Used',
+            title: t('overview.tokens'),
             value: formatTokens(computed.totalTokens),
             description: `${formatTokens(computed.totalCacheReadTokens)} from cache`,
             spark: getTokenSpark(tokensByDate),
@@ -273,7 +275,7 @@ export function OverviewClient() {
             index: 3,
           },
           {
-            title: 'Est. Cost',
+            title: t('overview.cost'),
             value: `$${computed.totalCost.toFixed(2)}`,
             description: `$${computed.totalCacheSavings.toFixed(2)} saved via cache`,
             spark: getTokenSpark(tokensByDate),
@@ -301,7 +303,7 @@ export function OverviewClient() {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
-                  <CardTitle className="text-base font-semibold">Usage Over Time</CardTitle>
+                  <CardTitle className="text-base font-semibold">{t('overview.usage_over_time')}</CardTitle>
                   <CardDescription className="text-xs mt-1">
                     Messages and sessions — last {chartDays} days
                   </CardDescription>
@@ -323,7 +325,7 @@ export function OverviewClient() {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
-                  <CardTitle className="text-base font-semibold">Model Distribution</CardTitle>
+                  <CardTitle className="text-base font-semibold">{t('overview.model_breakdown')}</CardTitle>
                   <CardDescription className="text-xs mt-1">Token usage by model</CardDescription>
                 </div>
                 <PieChart className="w-4 h-4 text-muted-foreground/40 mt-0.5" />
@@ -343,7 +345,7 @@ export function OverviewClient() {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
-                  <CardTitle className="text-base font-semibold">Peak Hours</CardTitle>
+                  <CardTitle className="text-base font-semibold">{t('overview.peak_hours')}</CardTitle>
                   <CardDescription className="text-xs mt-1">Activity by hour of day</CardDescription>
                 </div>
                 <Clock className="w-4 h-4 text-muted-foreground/40 mt-0.5" />
@@ -358,8 +360,7 @@ export function OverviewClient() {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
-                  <CardTitle className="text-base font-semibold">Project Activity</CardTitle>
-                  <CardDescription className="text-xs mt-1">Distribution across projects</CardDescription>
+                  <CardTitle className="text-base font-semibold">{t('overview.project_activity')}</CardTitle>
                 </div>
                 <PieChart className="w-4 h-4 text-muted-foreground/40 mt-0.5" />
               </div>
@@ -375,7 +376,7 @@ export function OverviewClient() {
       <Stagger index={7}>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">Token Breakdown</CardTitle>
+            <CardTitle className="text-base font-semibold">{t('overview.token_breakdown')}</CardTitle>
             <CardDescription className="text-xs mt-1">All-time token type distribution</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -424,7 +425,7 @@ export function OverviewClient() {
       <Stagger index={8}>
         <Card>
           <CardHeader>
-            <CardTitle className="text-base font-semibold">Recent Sessions</CardTitle>
+            <CardTitle className="text-base font-semibold">{t('overview.recent_sessions')}</CardTitle>
             <CardDescription className="text-xs mt-1">Latest Claude Code conversations</CardDescription>
           </CardHeader>
           <CardContent>
