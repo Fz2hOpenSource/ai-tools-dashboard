@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useMemo } from 'react'
 import useSWR from 'swr'
+import { useI18n } from '@/lib/i18n'
 import { TopBar } from '@/components/layout/top-bar'
 import type { ImportDiff } from '@/types/claude'
 import {
@@ -54,6 +55,7 @@ function previewUrl(dateFrom: string, dateTo: string) {
 }
 
 export default function ExportPage() {
+  const { t } = useI18n()
   const [exporting, setExporting] = useState(false)
   const [exportRange, setExportRange] = useState<{ from?: Date; to?: Date }>({})
   const [exportPickerOpen, setExportPickerOpen] = useState(false)
@@ -256,7 +258,7 @@ export default function ExportPage() {
                   <Download className="size-5" />
                 </div>
                 <div className="space-y-1">
-                  <CardTitle>Export</CardTitle>
+                  <CardTitle>{t('export.export_data')}</CardTitle>
                   <CardDescription>
                     Download <code className="rounded bg-muted px-1 py-0.5 text-xs">.cclens.json</code> for backup or
                     another machine.
@@ -328,7 +330,7 @@ export default function ExportPage() {
                   ) : (
                     <>
                       <Download className="size-4" />
-                      Download export
+                      {t('export.download')}
                     </>
                   )}
                 </Button>
@@ -344,7 +346,7 @@ export default function ExportPage() {
                   <Upload className="size-5" />
                 </div>
                 <div className="space-y-1">
-                  <CardTitle>Import / merge</CardTitle>
+                  <CardTitle>{t('export.import_data')}</CardTitle>
                   <CardDescription>
                     Drop a file from another machine. Merge is <strong className="text-foreground/90">additive only</strong>
                     — existing sessions are never overwritten.
@@ -368,7 +370,7 @@ export default function ExportPage() {
                 `}
               >
                 <Upload className="size-8 mb-3 text-muted-foreground opacity-80" />
-                <p className="text-sm text-foreground font-medium">Drop .cclens.json here</p>
+                <p className="text-sm text-foreground font-medium">{t('export.drop_here')}</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   or <span className="text-primary underline underline-offset-2">browse files</span>
                 </p>

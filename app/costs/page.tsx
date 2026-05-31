@@ -1,6 +1,7 @@
 'use client'
 
 import useSWR from 'swr'
+import { useI18n } from '@/lib/i18n'
 import { TopBar } from '@/components/layout/top-bar'
 import { CostOverTimeChart } from '@/components/costs/cost-over-time-chart'
 import { CostByProjectChart } from '@/components/costs/cost-by-project-chart'
@@ -31,6 +32,7 @@ function Stagger({ index, children }: { index: number; children: React.ReactNode
 
 export default function CostsPage() {
   const { data, error, isLoading } = useSWR<CostAnalytics>('/api/costs', fetcher, { refreshInterval: 30_000 })
+  const { t } = useI18n()
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -63,7 +65,7 @@ export default function CostsPage() {
                 {
                   index: 0,
                   icon: DollarSign,
-                  title: 'Total Estimated Cost',
+                  title: t('costs.total'),
                   value: formatCost(data.total_cost),
                   desc: 'All time spend across all projects',
                   color: 'text-[#d97706]',
@@ -71,7 +73,7 @@ export default function CostsPage() {
                 {
                   index: 1,
                   icon: TrendingDown,
-                  title: 'Cache Savings',
+                  title: t('costs.cache_savings'),
                   value: formatCost(data.total_savings),
                   desc: 'Saved by prompt caching',
                   color: 'text-[#34d399]',
@@ -79,7 +81,7 @@ export default function CostsPage() {
                 {
                   index: 2,
                   icon: Banknote,
-                  title: 'Without Cache',
+                  title: t('costs.without_cache'),
                   value: formatCost(data.total_cost + data.total_savings),
                   desc: 'What you would have spent',
                   color: 'text-red-400',
@@ -110,7 +112,7 @@ export default function CostsPage() {
               <Stagger index={3}>
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base font-semibold">Cost Over Time</CardTitle>
+                    <CardTitle className="text-base font-semibold">{t('costs.cost_over_time')}</CardTitle>
                     <CardDescription className="text-xs mt-1">Daily estimated spend</CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -125,7 +127,7 @@ export default function CostsPage() {
               <Stagger index={4}>
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base font-semibold">Cost by Project</CardTitle>
+                    <CardTitle className="text-base font-semibold">{t('costs.cost_by_project')}</CardTitle>
                     <CardDescription className="text-xs mt-1">Spend breakdown across projects</CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -139,7 +141,7 @@ export default function CostsPage() {
             <Stagger index={5}>
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base font-semibold">Per-Model Token Breakdown</CardTitle>
+                  <CardTitle className="text-base font-semibold">{t('costs.model_breakdown')}</CardTitle>
                   <CardDescription className="text-xs mt-1">Token usage and cost by model</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -152,7 +154,7 @@ export default function CostsPage() {
             <Stagger index={6}>
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base font-semibold">Cache Efficiency</CardTitle>
+                  <CardTitle className="text-base font-semibold">{t('costs.cache_efficiency')}</CardTitle>
                   <CardDescription className="text-xs mt-1">How much caching is saving you</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -165,7 +167,7 @@ export default function CostsPage() {
             <Stagger index={7}>
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base font-semibold">Pricing Reference</CardTitle>
+                  <CardTitle className="text-base font-semibold">{t('costs.pricing_reference')}</CardTitle>
                   <CardDescription className="text-xs mt-1">
                     Estimates only — override in{' '}
                     <code className="text-[11px] bg-muted/50 px-1.5 py-0.5 rounded font-mono">~/.cc-lens/pricing.json</code>

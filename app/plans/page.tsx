@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import useSWR from 'swr'
+import { useI18n } from '@/lib/i18n'
 import { TopBar } from '@/components/layout/top-bar'
 import { cn } from '@/lib/utils'
 import { ChevronDown, ClipboardList } from 'lucide-react'
@@ -240,6 +241,7 @@ export default function PlansPage() {
   const { data, error, isLoading } = useSWR<{ plans: PlanFile[] }>(
     '/api/plans', fetcher, { refreshInterval: 30_000 }
   )
+  const { t } = useI18n()
   const [search, setSearch] = useState('')
 
   const plans = data?.plans ?? []
@@ -271,7 +273,7 @@ export default function PlansPage() {
               <div className="flex-1 border border-border rounded-lg bg-card w-full focus-within:border-primary/40 transition-colors">
                 <input
                   className="w-full bg-transparent px-4 py-2.5 text-sm font-mono text-foreground placeholder-muted-foreground/50 outline-none"
-                  placeholder="search plans by name or content..."
+                  placeholder={t('plans.search')}
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                 />

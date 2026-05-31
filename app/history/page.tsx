@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import useSWR from 'swr'
+import { useI18n } from '@/lib/i18n'
 import { TopBar } from '@/components/layout/top-bar'
 import type { HistoryEntry } from '@/types/claude'
 import { Input } from '@/components/ui/input'
@@ -32,6 +33,7 @@ export default function HistoryPage() {
   const { data, error, isLoading } = useSWR<{ history: HistoryEntry[] }>(
     '/api/history?limit=2000', fetcher, { refreshInterval: 30_000 }
   )
+  const { t } = useI18n()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
 
@@ -78,7 +80,7 @@ export default function HistoryPage() {
               <div className="relative flex-1 w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search commands…"
+                  placeholder={t('history.search')}
                   value={search}
                   onChange={e => handleSearch(e.target.value)}
                   className="pl-9"

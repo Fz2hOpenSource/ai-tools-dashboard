@@ -1,6 +1,7 @@
 'use client'
 
 import useSWR from 'swr'
+import { useI18n } from '@/lib/i18n'
 import { TopBar } from '@/components/layout/top-bar'
 import { ActivityHeatmap } from '@/components/overview/activity-heatmap'
 import { PeakHoursChart } from '@/components/overview/peak-hours-chart'
@@ -58,6 +59,7 @@ function StatTile({
 
 export default function ActivityPage() {
   const { data, error, isLoading } = useSWR<ActivityData>('/api/activity', fetcher, { refreshInterval: 5_000 })
+  const { t } = useI18n()
 
   const hourCounts = data
     ? Object.fromEntries(data.hour_counts.map(h => [String(h.hour), h.count]))
@@ -71,7 +73,7 @@ export default function ActivityPage() {
         {error && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>Error loading data: {String(error)}</AlertDescription>
+            <AlertDescription>{t('error_api')}{String(error)}</AlertDescription>
           </Alert>
         )}
 
@@ -94,28 +96,28 @@ export default function ActivityPage() {
             {/* Stat tiles */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <StatTile
-                label="Current Streak"
+                label={t('activity.current_streak')}
                 value={data.streaks.current}
                 sub="consecutive days"
                 icon={Flame}
                 color="#f97316"
               />
               <StatTile
-                label="Longest Streak"
+                label={t('activity.longest_streak')}
                 value={data.streaks.longest}
                 sub="personal best"
                 icon={Zap}
                 color="var(--viz-sky)"
               />
               <StatTile
-                label="Active Days"
+                label={t('activity.active_days')}
                 value={data.total_active_days}
                 sub="total days with activity"
                 icon={TrendingUp}
                 color="#a78bfa"
               />
               <StatTile
-                label="Most Active Day"
+                label={t('activity.most_active_day')}
                 value={data.most_active_day ? data.most_active_day.slice(5) : '—'}
                 sub={data.most_active_day_msgs ? `${data.most_active_day_msgs.toLocaleString()} messages` : 'no data'}
                 icon={Star}
@@ -129,7 +131,7 @@ export default function ActivityPage() {
                 <CardHeader className="space-y-1 pb-0">
                   <CardTitle className="flex items-center gap-2 text-base font-semibold">
                     <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    Activity Calendar
+                    {t('activity_calendar')}
                   </CardTitle>
                   <CardDescription>GitHub-style contribution heatmap</CardDescription>
                 </CardHeader>
@@ -142,7 +144,7 @@ export default function ActivityPage() {
                 <CardHeader className="space-y-1 pb-0">
                   <CardTitle className="flex items-center gap-2 text-base font-semibold">
                     <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    Peak Hours
+                    {t('activity.peak_hours')}
                   </CardTitle>
                   <CardDescription>Activity by hour of day</CardDescription>
                 </CardHeader>
@@ -158,7 +160,7 @@ export default function ActivityPage() {
                 <CardHeader className="space-y-1 pb-0">
                   <CardTitle className="flex items-center gap-2 text-base font-semibold">
                     <BarChart3 className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    Usage Over Time
+                    {t('activity.usage_over_time_90d')}
                   </CardTitle>
                   <CardDescription>Messages and sessions over the last 90 days</CardDescription>
                 </CardHeader>
@@ -171,7 +173,7 @@ export default function ActivityPage() {
                 <CardHeader className="space-y-1 pb-0">
                   <CardTitle className="flex items-center gap-2 text-base font-semibold">
                     <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    Day of Week
+                    {t('activity.day_of_week')}
                   </CardTitle>
                   <CardDescription>Which days you use Claude Code most</CardDescription>
                 </CardHeader>

@@ -1,6 +1,7 @@
 'use client'
 
 import useSWR from 'swr'
+import { useI18n } from '@/lib/i18n'
 import { TopBar } from '@/components/layout/top-bar'
 import { ToolRankingChart } from '@/components/tools/tool-ranking-chart'
 import { McpServerPanel } from '@/components/tools/mcp-server-panel'
@@ -19,6 +20,7 @@ const fetcher = (url: string) =>
 
 export default function ToolsPage() {
   const { data, error, isLoading } = useSWR<ToolsAnalytics>('/api/tools', fetcher, { refreshInterval: 5_000 })
+  const { t } = useI18n()
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -48,7 +50,7 @@ export default function ToolsPage() {
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription className="flex items-center gap-2">
-                    <Zap className="w-4 h-4" /> Tool Calls
+                    <Zap className="w-4 h-4" /> {t('tools.total_calls')}
                   </CardDescription>
                   <CardTitle className="text-3xl font-bold tabular-nums text-[#d97706]">
                     {data.total_tool_calls.toLocaleString()}
@@ -62,7 +64,7 @@ export default function ToolsPage() {
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription className="flex items-center gap-2">
-                    <Wrench className="w-4 h-4" /> Unique Tools
+                    <Wrench className="w-4 h-4" /> {t('tools.unique_tools')}
                   </CardDescription>
                   <CardTitle className="text-3xl font-bold tabular-nums">
                     {data.tools.length}
@@ -76,7 +78,7 @@ export default function ToolsPage() {
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription className="flex items-center gap-2">
-                    <Server className="w-4 h-4" /> MCP Servers
+                    <Server className="w-4 h-4" /> {t('tools.mcp_servers')}
                   </CardDescription>
                   <CardTitle className="text-3xl font-bold tabular-nums text-[#34d399]">
                     {data.mcp_servers.length}
@@ -121,7 +123,7 @@ export default function ToolsPage() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div>
-                    <CardTitle>Tool Ranking</CardTitle>
+                    <CardTitle>{t('tools.tool_ranking')}</CardTitle>
                     <CardDescription>All tools ranked by total calls</CardDescription>
                   </div>
                   <Wrench className="w-4 h-4 text-muted-foreground mt-0.5" />
@@ -138,7 +140,7 @@ export default function ToolsPage() {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle>MCP Server Details</CardTitle>
+                      <CardTitle>{t('tools.mcp_details')}</CardTitle>
                       <CardDescription>Connected MCP servers and their tools</CardDescription>
                     </div>
                     <Server className="w-4 h-4 text-muted-foreground mt-0.5" />
@@ -153,7 +155,7 @@ export default function ToolsPage() {
             {/* Feature adoption */}
             <Card>
               <CardHeader>
-                <CardTitle>Feature Adoption</CardTitle>
+                <CardTitle>{t('tools.feature_adoption')}</CardTitle>
                 <CardDescription>How often advanced features are used across sessions</CardDescription>
               </CardHeader>
               <CardContent>
@@ -171,7 +173,7 @@ export default function ToolsPage() {
             {data.total_errors > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Tool Error Analysis</CardTitle>
+                  <CardTitle>{t('tools.error_analysis')}</CardTitle>
                   <CardDescription>
                     {data.total_errors} errors ·{' '}
                     {((data.total_errors / data.total_tool_calls) * 100).toFixed(1)}% error rate
@@ -201,7 +203,7 @@ export default function ToolsPage() {
             {data.versions.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Claude Code Version History</CardTitle>
+                  <CardTitle>{t('tools.version_history')}</CardTitle>
                   <CardDescription>Versions seen across your sessions</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -216,7 +218,7 @@ export default function ToolsPage() {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle>Git Branch Analytics</CardTitle>
+                      <CardTitle>{t('tools.git_branches')}</CardTitle>
                       <CardDescription>Most active branches by turn count</CardDescription>
                     </div>
                     <GitBranch className="w-4 h-4 text-muted-foreground mt-0.5" />

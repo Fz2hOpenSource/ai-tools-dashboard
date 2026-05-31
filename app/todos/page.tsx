@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import useSWR from 'swr'
+import { useI18n } from '@/lib/i18n'
 import { TopBar } from '@/components/layout/top-bar'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -103,6 +104,7 @@ export default function TodosPage() {
   const { data, error, isLoading } = useSWR<{ todos: TodoFile[] }>(
     '/api/todos', fetcher, { refreshInterval: 10_000 }
   )
+  const { t } = useI18n()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterType>('all')
 
@@ -174,7 +176,7 @@ export default function TodosPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search todos…"
+                placeholder={t('todos.search')}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="pl-9"

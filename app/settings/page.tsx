@@ -1,6 +1,7 @@
 'use client'
 
 import useSWR from 'swr'
+import { useI18n } from '@/lib/i18n'
 import { TopBar } from '@/components/layout/top-bar'
 import type { SkillInfo, PluginInfo } from '@/lib/claude-reader'
 
@@ -80,12 +81,13 @@ export default function SettingsPage() {
     skills: SkillInfo[]
     plugins: PluginInfo[]
   }>('/api/settings', fetcher, { refreshInterval: 30_000 })
+  const { t } = useI18n()
 
   return (
     <div className="flex flex-col min-h-screen">
       <TopBar titleKey="title.settings" subtitle="~/.claude/settings.json" />
       <div className="p-4 md:p-6 space-y-6">
-        {error && <p className="text-[#f87171] text-sm font-mono">Error: {String(error)}</p>}
+        {error && <p className="text-[#f87171] text-sm font-mono">{t('error_api')}{String(error)}</p>}
         {isLoading && (
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -95,7 +97,7 @@ export default function SettingsPage() {
         )}
         {data && (
           <>
-            <Section title="Storage">
+            <Section title={t('settings.storage_used')}>
               <div className="flex items-center gap-3">
                 <span className="text-primary text-2xl font-mono font-bold">
                   {formatBytes(data.storageBytes)}
@@ -104,7 +106,7 @@ export default function SettingsPage() {
               </div>
             </Section>
 
-            <Section title="Settings">
+            <Section title={t('settings.raw_settings')}>
               {Object.keys(data.settings).length === 0 ? (
                 <p className="text-muted-foreground/60 text-sm font-mono">No settings found in ~/.claude/settings.json</p>
               ) : (
@@ -115,7 +117,7 @@ export default function SettingsPage() {
             </Section>
 
             {data.settings.env && (
-              <Section title="Environment Variables">
+              <Section title={t('env_vars')}>
                 <div className="font-mono text-sm leading-relaxed overflow-x-auto">
                   <JsonValue value={data.settings.env} />
                 </div>
@@ -123,7 +125,7 @@ export default function SettingsPage() {
             )}
 
             {data.settings.mcpServers && (
-              <Section title="MCP Servers">
+              <Section title={t('settings.mcp_servers')}>
                 <div className="space-y-3">
                   {Object.entries(data.settings.mcpServers as Record<string, unknown>).map(([name, cfg]) => (
                     <div key={name} className="border border-border rounded p-3">
@@ -137,7 +139,7 @@ export default function SettingsPage() {
               </Section>
             )}
 
-            <Section title={`Skills (${data.skills.length})`}>
+            <Section title={`${t('settings.skills')} (${data.skills.length})`}>
               {data.skills.length === 0 ? (
                 <p className="text-muted-foreground/60 text-sm font-mono">No skills found in ~/.claude/skills/</p>
               ) : (
@@ -161,7 +163,7 @@ export default function SettingsPage() {
             </Section>
 
             {data.plugins.length > 0 && (
-              <Section title={`Plugins (${data.plugins.length})`}>
+              <Section title={`${t('settings.plugins')} (${data.plugins.length})`}>
                 <div className="grid gap-2">
                   {data.plugins.map((plugin, i) => (
                     <div key={i} className="border border-border rounded p-3 flex items-center justify-between gap-4">

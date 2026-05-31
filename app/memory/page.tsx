@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import useSWR, { mutate } from 'swr'
+import { useI18n } from '@/lib/i18n'
 import { TopBar } from '@/components/layout/top-bar'
 import type { MemoryEntry, MemoryType } from '@/lib/claude-reader'
 import { projectDisplayName, projectShortPath, formatRelativeDate } from '@/lib/decode'
@@ -213,6 +214,7 @@ export default function MemoryPage() {
   const { data, error, isLoading } = useSWR<{ memories: MemoryEntry[] }>(
     '/api/memory', fetcher, { refreshInterval: 15_000 }
   )
+  const { t } = useI18n()
   const [filter, setFilter] = useState<FilterType>('all')
   const [search, setSearch] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -282,10 +284,10 @@ export default function MemoryPage() {
           <>
             {/* Stat cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <StatCard value={memories.length}  label="total memories" color="#fbbf24" />
-              <StatCard value={projectCount}     label="projects"       color="var(--viz-sky)" />
-              <StatCard value={counts.feedback ?? 0} label="feedback"   color="#f87171" />
-              <StatCard value={staleCount}        label="stale (>30d)"  color="#94a3b8" />
+              <StatCard value={memories.length}  label={t('memory.total')} color="#fbbf24" />
+              <StatCard value={projectCount}     label={t('memory.projects')}       color="var(--viz-sky)" />
+              <StatCard value={counts.feedback ?? 0} label={t('memory.feedback')}   color="#f87171" />
+              <StatCard value={staleCount}        label={t('memory.stale')}  color="#94a3b8" />
             </div>
 
             {/* Type filter tabs */}
@@ -308,7 +310,7 @@ export default function MemoryPage() {
                     {m && (
                       <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: m.dot }} />
                     )}
-                    {type}
+                    {t(`memory.type_${type}`)}
                     <span className="opacity-60">({count})</span>
                   </button>
                 )
@@ -319,7 +321,7 @@ export default function MemoryPage() {
             <div className="border border-border rounded-lg bg-card focus-within:border-primary/40 transition-colors">
               <input
                 className="w-full bg-transparent px-4 py-2.5 text-sm font-mono text-foreground placeholder-muted-foreground/50 outline-none"
-                placeholder="search memories..."
+                placeholder={t('memory.search')}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />

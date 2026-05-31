@@ -234,6 +234,20 @@ const DICT: Record<Locale, Record<string, string>> = {
     // ── Misc ──
     'made_by': 'Made by',
     'error_loading': 'Error loading data',
+    'prev': 'Prev',
+    'next': 'Next',
+    'save': 'Save',
+    'cancel': 'Cancel',
+    'close': 'Close',
+    'confirm': 'Confirm',
+    'no_results': 'No results',
+    'error_api': 'Error loading data: ',
+    'activity_calendar': 'Activity Calendar',
+    'env_vars': 'Environment Variables',
+    'what_exported': 'What will be exported',
+    'date_range_optional': 'Date range (optional)',
+    'merge_preview': 'Merge preview',
+    'scope_label': 'scope: ',
   },
 
   'zh-CN': {
@@ -463,6 +477,20 @@ const DICT: Record<Locale, Record<string, string>> = {
     // ── Misc ──
     'made_by': '由',
     'error_loading': '加载数据出错',
+    'prev': '上一页',
+    'next': '下一页',
+    'save': '保存',
+    'cancel': '取消',
+    'close': '关闭',
+    'confirm': '确认',
+    'no_results': '无结果',
+    'error_api': '加载数据出错: ',
+    'activity_calendar': '活跃日历',
+    'env_vars': '环境变量',
+    'what_exported': '导出内容',
+    'date_range_optional': '日期范围（可选）',
+    'merge_preview': '合并预览',
+    'scope_label': '范围: ',
   },
 }
 
