@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle, MessageSquare, Coins, DollarSign, Clock, Zap, Star } from 'lucide-react'
 import { isBookmarked, toggleBookmark as toggleBookmarkStorage } from '@/lib/bookmarks'
 import { useToast } from '@/lib/toast'
+import { useI18n } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
 const fetcher = (url: string) =>
@@ -33,6 +34,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
 
   const meta = metaData?.session
   const { toast } = useToast()
+  const { t } = useI18n()
   const [bookmarked, setBookmarked] = useState(isBookmarked(id))
   // bookmark sync on mount
   useEffect(() => { setBookmarked(isBookmarked(id)) }, [id])
@@ -134,7 +136,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
               bookmarked && 'fill-amber-400 drop-shadow-[0_0_4px_rgba(245,158,11,0.5)]',
             )}
           />
-          {bookmarked ? 'Starred' : 'Star session'}
+          {bookmarked ? t('session.starred') : t('session.star')}
         </button>
         <div
           className={
@@ -146,26 +148,26 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
           <Card className="gap-0">
             <CardHeader className="pb-2">
               <CardDescription className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" /> Turns
+                <MessageSquare className="h-4 w-4" /> {t('session.turns')}
               </CardDescription>
               <CardTitle className="text-3xl font-bold tabular-nums">
                 {replay.turns.filter(t => t.type === 'assistant').length}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground">Assistant messages</p>
+              <p className="text-xs text-muted-foreground">{t('session.assistant_messages')}</p>
             </CardContent>
           </Card>
 
           <Card className="gap-0">
             <CardHeader className="pb-2">
               <CardDescription className="flex items-center gap-2">
-                <Coins className="h-4 w-4" /> Tokens
+                <Coins className="h-4 w-4" /> {t('session.tokens')}
               </CardDescription>
               <CardTitle className="text-3xl font-bold tabular-nums text-blue-700 dark:text-[#60a5fa]">{formatTokens(totalTokens)}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground">Input + output + cache</p>
+              <p className="text-xs text-muted-foreground">{t('session.input_output_cache')}</p>
             </CardContent>
           </Card>
 
@@ -179,7 +181,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground">Estimated spend</p>
+              <p className="text-xs text-muted-foreground">{t('session.estimated')}</p>
             </CardContent>
           </Card>
 
@@ -187,7 +189,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
             <Card className="gap-0">
               <CardHeader className="pb-2">
                 <CardDescription className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" /> Duration
+                  <Clock className="h-4 w-4" /> {t('session.duration')}
                 </CardDescription>
                 <CardTitle className="text-3xl font-bold tabular-nums">
                   {formatDuration(meta.duration_minutes ?? 0)}
@@ -203,7 +205,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
             <Card className="gap-0 border-amber-500/25">
               <CardHeader className="pb-2">
                 <CardDescription className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-amber-500" /> Compactions
+                  <Zap className="h-4 w-4 text-amber-500" /> {t('session.compactions')}
                 </CardDescription>
                 <CardTitle className="text-3xl font-bold tabular-nums text-amber-500">
                   {replay.compactions.length}

@@ -10,23 +10,26 @@ import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Search, AlertTriangle, ArrowUpDown } from 'lucide-react'
+import { useI18n } from '@/lib/i18n'
 
 const fetcher = (url: string) =>
   fetch(url).then(r => { if (!r.ok) throw new Error(`API error ${r.status}`); return r.json() })
 
 type SortKey = 'last_active' | 'estimated_cost' | 'session_count' | 'total_duration_minutes'
 
-const SORT_OPTIONS: { k: SortKey; label: string }[] = [
-  { k: 'last_active',            label: 'Recent'   },
-  { k: 'estimated_cost',         label: 'Cost'     },
-  { k: 'session_count',          label: 'Sessions' },
-  { k: 'total_duration_minutes', label: 'Time'     },
-]
+const SORT_KEYS: SortKey[] = ['last_active', 'estimated_cost', 'session_count', 'total_duration_minutes']
+const SORT_I18N: Record<SortKey, string> = {
+  last_active: 'sort.recent',
+  estimated_cost: 'sort.cost',
+  session_count: 'sort.sessions',
+  total_duration_minutes: 'sort.time',
+}
 
 export default function ProjectsPage() {
   const { data, error, isLoading } = useSWR<{ projects: ProjectSummary[] }>(
     '/api/projects', fetcher, { refreshInterval: 5_000 }
   )
+  const { t } = useI18n()
   const [sort, setSort] = useState<SortKey>('last_active')
   const [search, setSearch] = useState('')
 
@@ -66,7 +69,7 @@ export default function ProjectsPage() {
           <div className="relative flex-1 w-full sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search projects…"
+              placeholder={t('projects.search')}
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="pl-9"
@@ -79,8 +82,8 @@ export default function ProjectsPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {SORT_OPTIONS.map(({ k, label }) => (
-                  <SelectItem key={k} value={k}>{label}</SelectItem>
+                {SORT_KEYS.map((k) => (
+                  <SelectItem key={k} value={k}>{t(SORT_I18N[k])}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -101,7 +104,7 @@ export default function ProjectsPage() {
 
         {!isLoading && sorted.length === 0 && (
           <div className="text-center py-16 text-muted-foreground text-sm">
-            {search ? 'No projects match your search.' : 'No projects found in ~/.claude/'}
+            {search ? t('projects.no_results') : t('projects.no_found')}
           </div>
         )}
       </div>
