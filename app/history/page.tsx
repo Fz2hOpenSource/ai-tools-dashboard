@@ -55,7 +55,7 @@ export default function HistoryPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <TopBar title="History" subtitle="~/.claude/history.jsonl" />
+      <TopBar titleKey="title.history" subtitle="~/.claude/history.jsonl" />
       <div className="p-4 md:p-6 space-y-4">
 
         {error && (

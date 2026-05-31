@@ -18,7 +18,7 @@ export default function SessionsPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <TopBar
-        title="Sessions"
+        titleKey="title.sessions"
         subtitle={data ? `${data.total} total sessions` : 'loading...'}
       />
       <div className="p-4 sm:p-6">

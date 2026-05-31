@@ -145,7 +145,7 @@ export default function ExportPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <TopBar
-        title="Export & import"
+        titleKey="title.export"
         subtitle="Download a portable backup of ~/.claude/ analytics or merge data from another machine"
       />
 

@@ -7,23 +7,25 @@ import {
   FolderOpen, Activity, Moon, Sun,
 } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
+import { useI18n } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
-const NAV = [
-  { href: '/',         label: 'Overview',  icon: LayoutDashboard },
-  { href: '/sessions', label: 'Sessions',  icon: MessageSquare   },
-  { href: '/costs',    label: 'Costs',     icon: DollarSign      },
-  { href: '/projects', label: 'Projects',  icon: FolderOpen      },
-  { href: '/activity', label: 'Activity',  icon: Activity        },
+const NAV_KEYS = [
+  { href: '/',         key: 'nav.overview',  icon: LayoutDashboard },
+  { href: '/sessions', key: 'nav.sessions',  icon: MessageSquare   },
+  { href: '/costs',    key: 'nav.costs',     icon: DollarSign      },
+  { href: '/projects', key: 'nav.projects',  icon: FolderOpen      },
+  { href: '/activity', key: 'nav.activity',  icon: Activity        },
 ]
 
 export function BottomNav() {
   const pathname = usePathname()
   const { theme, toggle } = useTheme()
+  const { t } = useI18n()
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-sidebar/90 backdrop-blur-lg border-t border-sidebar-border flex">
-      {NAV.map(({ href, label, icon: Icon }) => {
+      {NAV_KEYS.map(({ href, key, icon: Icon }) => {
         const active = pathname === href
         return (
           <Link
@@ -41,7 +43,7 @@ export function BottomNav() {
               <span className="absolute top-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-sidebar-primary shadow-[0_0_6px_var(--sidebar-primary)]" />
             )}
             <Icon className="w-4 h-4" />
-            <span className="text-[10px] font-medium leading-none">{label}</span>
+            <span className="text-[10px] font-medium leading-none">{t(key)}</span>
           </Link>
         )
       })}

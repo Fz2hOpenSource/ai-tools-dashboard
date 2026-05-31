@@ -49,7 +49,7 @@ export default function ProjectsPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <TopBar
-        title="Projects"
+        titleKey="title.projects"
         subtitle={data ? `${data.projects.length} projects` : 'Loading…'}
       />
       <div className="p-6 space-y-4">

@@ -9,23 +9,24 @@ import {
 } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
 import { useSidebar } from '@/components/layout/sidebar-context'
+import { useI18n } from '@/lib/i18n'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
-const NAV = [
-  { href: '/',         label: 'Overview',  icon: LayoutDashboard },
-  { href: '/projects', label: 'Projects',  icon: FolderOpen      },
-  { href: '/sessions', label: 'Sessions',  icon: MessageSquare   },
-  { href: '/costs',    label: 'Costs',     icon: DollarSign      },
-  { href: '/tools',    label: 'Tools',     icon: Wrench          },
-  { href: '/activity', label: 'Activity',  icon: Activity        },
-  { href: '/history',  label: 'History',   icon: History         },
-  { href: '/todos',    label: 'Todos',     icon: CheckSquare     },
-  { href: '/plans',    label: 'Plans',     icon: FileText        },
-  { href: '/memory',   label: 'Memory',    icon: Brain           },
-  { href: '/settings', label: 'Settings',  icon: Settings        },
-  { href: '/export',   label: 'Export',    icon: Download        },
+const NAV_KEYS = [
+  { href: '/',         key: 'nav.overview',  icon: LayoutDashboard },
+  { href: '/projects', key: 'nav.projects',  icon: FolderOpen      },
+  { href: '/sessions', key: 'nav.sessions',  icon: MessageSquare   },
+  { href: '/costs',    key: 'nav.costs',     icon: DollarSign      },
+  { href: '/tools',    key: 'nav.tools',     icon: Wrench          },
+  { href: '/activity', key: 'nav.activity',  icon: Activity        },
+  { href: '/history',  key: 'nav.history',   icon: History         },
+  { href: '/todos',    key: 'nav.todos',     icon: CheckSquare     },
+  { href: '/plans',    key: 'nav.plans',     icon: FileText        },
+  { href: '/memory',   key: 'nav.memory',    icon: Brain           },
+  { href: '/settings', key: 'nav.settings',  icon: Settings        },
+  { href: '/export',   key: 'nav.export',    icon: Download        },
 ]
 
 function NavItem({
@@ -81,6 +82,7 @@ function SidebarContents({
   const pathname = usePathname()
   const { theme, toggle: toggleTheme } = useTheme()
   const { toggle: toggleCollapsed } = useSidebar()
+  const { t } = useI18n()
 
   return (
     <div className="flex flex-col h-full">
@@ -123,11 +125,11 @@ function SidebarContents({
       {/* ── Navigation ── */}
       <nav className={cn('flex-1 py-4 space-y-0.5 overflow-y-auto', collapsed ? 'px-1' : 'px-3')}>
         <TooltipProvider delayDuration={150}>
-          {NAV.map(({ href, label, icon }) => (
+          {NAV_KEYS.map(({ href, key, icon }) => (
             <div key={href} onClick={onNavigate}>
               <NavItem
                 href={href}
-                label={label}
+                label={t(key)}
                 icon={icon}
                 active={pathname === href}
                 collapsed={collapsed}

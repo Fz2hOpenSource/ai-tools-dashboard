@@ -7,11 +7,15 @@ import { Search, RefreshCw, Menu, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSidebar } from '@/components/layout/sidebar-context'
 import { ProviderSelector } from '@/components/provider-selector'
+import { LanguageSwitcher } from '@/components/language-switcher'
+import { useI18n } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
 interface TopBarProps {
-  title: string
+  title?: string
+  titleKey?: string
   subtitle?: string
+  subtitleKey?: string
   className?: string
 }
 
@@ -22,11 +26,14 @@ function formatTimestamp(d: Date) {
   return `${hours}:${minutes}:${seconds}`
 }
 
-export function TopBar({ title, subtitle, className }: TopBarProps) {
+export function TopBar({ title, titleKey, subtitle, subtitleKey, className }: TopBarProps) {
   const router = useRouter()
   const { setMobileOpen } = useSidebar()
+  const { t } = useI18n()
   const [refreshing, setRefreshing] = useState(false)
   const [now, setNow] = useState<string>('')
+  const displayTitle = titleKey ? t(titleKey) : (title ?? '')
+  const displaySubtitle = subtitleKey ? t(subtitleKey) : subtitle
 
   useEffect(() => {
     setNow(formatTimestamp(new Date()))
@@ -65,9 +72,9 @@ export function TopBar({ title, subtitle, className }: TopBarProps) {
         </Button>
 
         <div>
-          <h1 className="text-base font-semibold text-foreground truncate tracking-tight">{title}</h1>
+          <h1 className="text-base font-semibold text-foreground truncate tracking-tight">{displayTitle}</h1>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            {subtitle && <span className="truncate max-w-[200px] sm:max-w-sm">{subtitle}</span>}
+            {displaySubtitle && <span className="truncate max-w-[200px] sm:max-w-sm">{displaySubtitle}</span>}
             {now && (
               <span className="inline-flex items-center gap-1 text-muted-foreground/60 font-mono tabular-nums">
                 <Clock className="w-3 h-3" />
@@ -81,6 +88,7 @@ export function TopBar({ title, subtitle, className }: TopBarProps) {
       {/* Right: actions */}
       <div className="flex items-center gap-2 shrink-0">
         <ProviderSelector />
+        <LanguageSwitcher />
 
         {/* Search — desktop */}
         <Button
@@ -90,7 +98,7 @@ export function TopBar({ title, subtitle, className }: TopBarProps) {
           className="hidden md:flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <Search className="w-3.5 h-3.5 opacity-50" />
-          <span className="text-xs">Search</span>
+          <span className="text-xs">{t('search')}</span>
           <kbd className="ml-1 px-1.5 py-0.5 text-[10px] text-muted-foreground/40 rounded font-sans bg-muted/50">⌘K</kbd>
         </Button>
 
@@ -115,7 +123,7 @@ export function TopBar({ title, subtitle, className }: TopBarProps) {
           aria-label="Refresh data"
         >
           <RefreshCw className={cn('w-3.5 h-3.5 transition-all', refreshing && 'animate-spin text-primary')} />
-          <span className="hidden sm:inline text-xs">{refreshing ? 'Refreshing…' : 'Refresh'}</span>
+          <span className="hidden sm:inline text-xs">{refreshing ? t('refreshing') : t('refresh')}</span>
         </Button>
       </div>
     </header>

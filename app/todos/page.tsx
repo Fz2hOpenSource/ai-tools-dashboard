@@ -126,7 +126,7 @@ export default function TodosPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <TopBar title="Todos" subtitle="~/.claude/todos/" />
+      <TopBar titleKey="title.todos" subtitle="~/.claude/todos/" />
       <div className="p-4 md:p-6 space-y-5">
 
         {error && (

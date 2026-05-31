@@ -9,6 +9,7 @@ import { SidebarProvider } from '@/components/layout/sidebar-context'
 import { ClientLayout } from '@/components/layout/client-layout'
 import { ToastProvider } from '@/lib/toast'
 import { Toaster } from '@/components/ui/toaster'
+import { I18nProvider } from '@/lib/i18n'
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
@@ -36,6 +37,7 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning className={`${geistMono.variable} ${pressStart2P.variable} antialiased`}>
         <ThemeProvider>
+          <I18nProvider>
           <ToastProvider>
             <SidebarProvider>
               <div className="flex min-h-screen">
@@ -47,6 +49,7 @@ export default function RootLayout({
             </SidebarProvider>
             <Toaster />
           </ToastProvider>
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>
