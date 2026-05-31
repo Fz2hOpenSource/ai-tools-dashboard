@@ -1,18 +1,19 @@
 {
-  "name": "cc-lens",
-  "version": "0.3.3",
-  "description": "Claude Code Lens — visualize your usage, costs, and sessions from ~/.claude/",
-  "author": "Arindam Majumder <arindam@studio1hq.com> (https://github.com/Arindam200)",
+  "name": "aidashboard",
+  "version": "0.4.0",
+  "description": "AI Dashboard — local analytics for Claude Code, OpenClaw, and Codex CLI. Visualize your AI usage, costs, and sessions.",
+  "author": "Fz2hOpenSource",
   "license": "MIT",
-  "homepage": "https://github.com/Arindam200/cc-lens#readme",
+  "homepage": "https://github.com/Fz2hOpenSource/ai-tools-dashboard#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Arindam200/cc-lens.git"
+    "url": "https://github.com/Fz2hOpenSource/ai-tools-dashboard.git"
   },
   "keywords": [
-    "claude",
+    "ai",
     "claude-code",
-    "anthropic",
+    "openclaw",
+    "codex",
     "dashboard",
     "analytics",
     "cli"

@@ -1,6 +1,7 @@
-# Claude Code Lens 使用指南
+# AI Dashboard 完整操作手册
 
 > 本地 AI 编程助手使用数据分析仪表盘。支持 **Claude Code**、**OpenClaw**、**Codex CLI** 三种工具。
+> 完全本地运行，不联网、不上传数据、不需要 API Key。
 
 ---
 
@@ -195,3 +196,219 @@ A: 不会。cc-lens 完全本地运行，不联网、不登录、不上传数据
 
 ### Q: 如何备份数据？
 A: 使用 Export 页面导出 `.cclens.json` 文件。可导入到另一台机器的 cc-lens 中预览合并。
+
+### Q: 页面切换很慢？
+A: 首次打开需要从硬盘解析所有会话文件（165 个文件约需 8 秒）。之后所有页面切换都在 0.03 秒内完成。重启 dev server 后首次请求约 2 秒（从磁盘缓存恢复）。数据每 5 分钟自动刷新，刷新期间走缓存不影响使用。
+
+### Q: 新会话什么时候出现？
+A: 内存缓存有 5 分钟 TTL。过期后自动从源文件重新解析，新数据最长 5 分钟自动出现。想立即刷新点 TopBar 的 Refresh 按钮。
+
+---
+
+## 架构原理
+
+### 数据流
+
+```
+用户浏览器                Next.js 服务端              硬盘
+    │                        │                      │
+    ├─ SWR 轮询(30s) ──────→├─ API Route ──────────→├─ ~/.claude/projects/
+    │                        │                      ├─ ~/.openclaw/agents/main/sessions/
+    │                        │                      ├─ ~/.codex/sessions/
+    │                        │                      │
+    │                        ├─ 三层缓存:             │
+    │                        │  1. 内存缓存(5min)    │
+    │                        │  2. 磁盘缓存(永久)    │
+    │                        │  3. 源文件解析(8s)    │
+    │                        │                      │
+    │←── JSON 响应 ──────────├←─────────────────────┤
+```
+
+### Provider 自动检测
+
+服务启动时，依次检查以下目录：
+
+| 工具 | 默认路径 | 环境变量 |
+|------|---------|---------|
+| Claude Code | `~/.claude/projects/` | `CLAUDE_CONFIG_DIR` |
+| OpenClaw | `~/.openclaw/agents/main/sessions/` | `OPENCLAW_HOME` |
+| Codex | `~/.codex/sessions/` | `CODEX_HOME` |
+
+目录存在即视为该工具已安装，自动加载数据。TopBar 右侧显示检测到的工具数和会话数。
+
+### OpenClaw 数据解析
+
+每个 JSONL 会话文件的解析逻辑（`lib/readers/openclaw.ts`）：
+
+1. 读取文件全部内容（`fs.readFile`）
+2. 按行分割，逐行 `JSON.parse`
+3. 识别事件类型：
+   - `type: "session"` → 提取 cwd（项目路径）、start_time
+   - `type: "model_change"` → 提取模型名（modelId）
+   - `type: "message"` + `role: "user"` → 计数用户消息、提取首条提示
+   - `type: "message"` + `role: "assistant"` → 累加 token（usage.input/output/cacheRead）、统计工具调用
+4. 组装为统一的 `ParsedSession` 格式，与 Claude Code 数据合并展示
+
+### Codex 数据解析
+
+Codex 的 rollout JSONL 格式（`lib/readers/codex.ts`）：
+
+1. 递归扫描 `sessions/YYYY/MM/DD/rollout-*.jsonl`
+2. 每行包含 `$rollout_item_type` 字段：
+   - `SessionMeta` → 提取 session_id、cwd、model_provider
+   - `EventMsg.TokenCount` → 提取累计 token 值
+   - `EventMsg.UserMessage/AgentMessage` → 计数消息
+   - `TurnContext` → 提取模型名
+3. TokenCount 使用累计值取最大值（非增量计算）
+
+### 缓存机制
+
+三层缓存架构，逐级回退：
+
+| 层级 | 位置 | 命中速度 | 有效期 | 触发条件 |
+|------|------|---------|--------|---------|
+| 内存缓存 | Node.js 进程 | ~0.03s | 5 分钟 | 正常页面切换 / SWR 轮询 |
+| 磁盘缓存 | `%TEMP%/cc-lens-sessions-cache.json` | ~2s | 永久（重启不丢） | 服务重启后首次请求 |
+| 源文件解析 | `fs.readFile` JSONL 文件 | ~8s | — | 首次安装 / 点 Refresh |
+
+SWR 后台轮询走内存缓存（秒返），不影响用户操作。缓存过期自动触发源文件重解析，对用户透明。
+
+### API 路由参考
+
+| 路由 | 数据来源 | 说明 |
+|------|---------|------|
+| `/api/stats` | stats-cache.json + sessions | 聚合统计（会话数、消息数、token 等） |
+| `/api/sessions` | getAllParsedSessions() | 会话列表 + 元数据 |
+| `/api/sessions/[id]` | 单 session meta | 会话元数据 |
+| `/api/sessions/[id]/replay` | JSONL 文件全文 | 完整对话回放 |
+| `/api/projects` | 按 project_path 聚合 | 项目列表 |
+| `/api/costs` | sessions + 定价表 | 费用估算 |
+| `/api/tools` | sessions tool_counts | 工具使用统计 |
+| `/api/activity` | sessions 时间戳 | 活跃度分析 |
+| `/api/history` | history.jsonl | 命令历史 |
+| `/api/todos` | ~/.claude/todos/ | 待办事项 |
+| `/api/plans` | ~/.claude/plans/ | 计划文件 |
+| `/api/memory` | ~/.claude/projects/*/memory/ | 记忆文件 |
+| `/api/settings` | settings.json + skills/plugins | 设置信息 |
+| `/api/export` | 聚合数据导出 | 导出 .cclens.json |
+| `/api/debug-providers` | 各 reader 状态 | Provider 检测诊断 |
+| `/api/refresh` | 清除所有缓存 | 强制重新解析 |
+
+全部路由使用 `export const dynamic = 'force-dynamic'`，无静态缓存。
+
+---
+
+## 故障排查
+
+### 诊断 Provider 状态
+
+```bash
+curl http://localhost:3000/api/debug-providers
+```
+
+返回示例：
+```json
+{
+  "claude":   { "available": true, "sessionCount": 51 },
+  "openclaw": { "available": true, "sessionCount": 114 },
+  "codex":    { "available": false }
+}
+```
+
+- `available: false` → 工具未安装或路径配置错误
+- `sessionCount: 0` → 工具已安装但无会话数据
+
+### API 响应时间诊断
+
+```bash
+curl -w "time: %{time_total}s" -s -o /dev/null http://localhost:3000/api/sessions
+```
+
+- < 0.5s：正常（内存缓存命中）
+- 2-3s：磁盘缓存加载中（首次请求或刚重启）
+- > 8s：从源文件解析中（缓存未命中，首次安装）
+
+### 缓存强制清理
+
+如果数据异常，手动删除缓存：
+
+```bash
+# Windows
+del %TEMP%\cc-lens-sessions-cache.json
+
+# macOS / Linux
+rm /tmp/cc-lens-sessions-cache.json
+```
+
+或者直接点 TopBar 的 Refresh 按钮（调用 `/api/refresh` 清除全部缓存）。
+
+### .env.local 未生效
+
+确认文件在项目根目录，且格式正确：
+```bash
+# 正确格式
+OPENCLAW_HOME=D:\Cadence\SPB_Date\.openclaw
+
+# 错误 — 不要加引号
+OPENCLAW_HOME="D:\path\.openclaw"
+
+# 错误 — 反斜杠不用转义
+OPENCLAW_HOME=D:\\path\\.openclaw
+```
+
+修改后需重启 dev server。
+
+---
+
+## 项目结构速查
+
+```
+ai-tools-dashboard/
+├── app/                        # Next.js App Router 页面 + API
+│   ├── page.tsx                # 总览页
+│   ├── layout.tsx              # 根布局
+│   ├── globals.css             # Terminal Observatory 主题
+│   ├── overview-client.tsx     # 总览页客户端组件
+│   ├── api/                    # 17 个 API 路由
+│   ├── sessions/               # 会话列表 + 详情
+│   ├── projects/               # 项目列表 + 详情
+│   ├── costs/                  # 费用分析
+│   ├── tools/                  # 工具统计
+│   ├── activity/               # 活跃度
+│   ├── history/                # 命令历史
+│   ├── todos/                  # 待办事项
+│   ├── plans/                  # 计划文件
+│   ├── memory/                 # 记忆管理
+│   ├── settings/               # 设置查看
+│   └── export/                 # 导出导入
+├── components/
+│   ├── layout/                 # Sidebar, TopBar, BottomNav
+│   ├── ui/                     # shadcn/ui 组件 + AnimatedCounter, Toaster, SkeletonCard
+│   ├── overview/               # StatCard, 图表组件
+│   ├── sessions/               # SessionTable, SessionBadges, Replay
+│   ├── costs/                  # 费用图表
+│   ├── tools/                  # 工具图表
+│   ├── projects/               # ProjectCard
+│   ├── activity/               # 活跃度图表
+│   ├── provider-selector.tsx   # 多 Provider 切换
+│   ├── language-switcher.tsx   # 中英文切换
+│   ├── keyboard-help.tsx       # 快捷键帮助面板
+│   ├── page-transition.tsx     # 页面过渡动画
+│   └── back-to-top.tsx         # 回顶按钮
+├── lib/
+│   ├── claude-reader.ts        # Claude Code 数据读取 + 缓存
+│   ├── readers/                # 多 Provider 抽象层
+│   │   ├── types.ts            # ProviderReader 接口
+│   │   ├── openclaw.ts         # OpenClaw 会话解析
+│   │   ├── codex.ts            # Codex 会话解析
+│   │   └── index.ts            # 自动检测 + 聚合
+│   ├── i18n.tsx                # 中英文翻译字典
+│   ├── pricing.ts              # 模型定价表
+│   ├── decode.ts               # 格式化工具函数
+│   ├── bookmarks.ts            # Session 收藏
+│   └── toast.tsx               # Toast 通知
+├── types/claude.ts             # TypeScript 类型定义
+├── GUIDE.md                    # 本文档
+├── .env.example                # 环境变量模板
+└── .env.local                  # 本地环境变量（不提交 Git）
+```

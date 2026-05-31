@@ -1,8 +1,8 @@
-![cc-lens CLI](./public/cc-lens.png)
+![AI Dashboard](./public/cc-lens.png)
 
-# Claude Code Lens (cc-lens) — Terminal Observatory 增强版
+# AI Dashboard — 本地 AI 使用数据分析仪表盘
 
-Claude Code 本地使用数据分析仪表盘。无需云端、不上传数据、不需要 API Key，直接读取 `~/.claude/` 目录，可视化展示你的 AI 使用情况。
+支持 **Claude Code**、**OpenClaw**、**Codex CLI**。无需云端、不上传数据、不需要 API Key，直接读取本地数据，可视化展示你的 AI 使用情况。
 
 ```bash
 npx cc-lens

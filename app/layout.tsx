@@ -23,8 +23,8 @@ const pressStart2P = Press_Start_2P({
 })
 
 export const metadata: Metadata = {
-  title: 'Claude Code Lens',
-  description: 'Local Claude Code analytics. Reads directly from ~/.claude/',
+  title: 'AI Dashboard',
+  description: 'Local AI usage analytics — Claude Code, OpenClaw, Codex CLI. Reads directly from your machine.',
 }
 
 export default function RootLayout({
