@@ -273,7 +273,7 @@ async function saveDiskCache(data: ParsedSession[]) {
 }
 
 export async function getAllParsedSessions(): Promise<ParsedSession[]> {
-  // Return in-memory cached result if fresh
+  // Return in-memory cached result if fresh (5 min TTL)
   if (_allSessionsCache && Date.now() - _allSessionsCache.time < RESULT_CACHE_TTL) {
     return _allSessionsCache.data
   }
@@ -283,12 +283,15 @@ export async function getAllParsedSessions(): Promise<ParsedSession[]> {
 
   _allSessionsPromise = (async () => {
     try {
-    // Try disk cache first (survives server restarts)
-    const diskCached = await loadDiskCache()
-    if (diskCached) {
-      _allSessionsCache = { data: diskCached, time: Date.now() }
-      return diskCached
+    // On first call after server restart, try disk cache for instant warm-up
+    if (!_allSessionsCache) {
+      const diskCached = await loadDiskCache()
+      if (diskCached) {
+        _allSessionsCache = { data: diskCached, time: Date.now() }
+        return diskCached
+      }
     }
+    // Otherwise: re-parse from source (cache expired, data might have changed)
 
     let slugs: string[]
     try {
