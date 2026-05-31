@@ -1,7 +1,7 @@
 {
-  "name": "aidashboard",
+  "name": "ai-db",
   "version": "0.4.0",
-  "description": "AI Dashboard — local analytics for Claude Code, OpenClaw, and Codex CLI. Visualize your AI usage, costs, and sessions.",
+  "description": "AI-DB — local analytics for Claude Code, OpenClaw, and Codex CLI. Visualize your AI usage, costs, and sessions.",
   "author": "Fz2hOpenSource",
   "license": "MIT",
   "homepage": "https://github.com/Fz2hOpenSource/ai-tools-dashboard#readme",

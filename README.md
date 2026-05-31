@@ -1,6 +1,6 @@
-![AI Dashboard](./public/cc-lens.png)
+![AI-DB](./public/cc-lens.png)
 
-# AI Dashboard — 本地 AI 使用数据分析仪表盘
+# AI-DB — 本地 AI 使用数据分析仪表盘
 
 支持 **Claude Code**、**OpenClaw**、**Codex CLI**。无需云端、不上传数据、不需要 API Key，直接读取本地数据，可视化展示你的 AI 使用情况。
 

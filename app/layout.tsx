@@ -23,7 +23,7 @@ const pressStart2P = Press_Start_2P({
 })
 
 export const metadata: Metadata = {
-  title: 'AI Dashboard',
+  title: 'AI-DB',
   description: 'Local AI usage analytics — Claude Code, OpenClaw, Codex CLI. Reads directly from your machine.',
 }
 

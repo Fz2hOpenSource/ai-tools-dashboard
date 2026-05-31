@@ -105,7 +105,7 @@ function SidebarContents({
             style={{ fontFamily: 'var(--font-press-start)' }}
           >
             <span className="dark:[text-shadow:0_0_12px_rgba(224,120,10,0.5)] [text-shadow:0_1px_0_rgba(255,255,255,0.5)]">
-              AI Dashboard
+              AI-DB
             </span>
             {/* tiny indicator dot */}
             <span className="w-1.5 h-1.5 rounded-full bg-[#f97316] dark:bg-[#e0780a] shadow-[0_0_6px_rgba(224,120,10,0.6)]" />

@@ -1,4 +1,4 @@
-# AI Dashboard 完整操作手册
+# AI-DB 完整操作手册
 
 > 本地 AI 编程助手使用数据分析仪表盘。支持 **Claude Code**、**OpenClaw**、**Codex CLI** 三种工具。
 > 完全本地运行，不联网、不上传数据、不需要 API Key。
