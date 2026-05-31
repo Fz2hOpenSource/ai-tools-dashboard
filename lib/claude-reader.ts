@@ -250,21 +250,28 @@ async function parseSessionFile(filePath: string, sessionId: string): Promise<Pa
  * fields (slug_name, cc_version, git_branch, has_compaction, has_thinking) so
  * callers don't need a separate second pass.
  */
-// Global result cache for getAllParsedSessions (1 minute TTL)
+// Global result cache + in-flight dedup for getAllParsedSessions
 let _allSessionsCache: { data: ParsedSession[]; time: number } | null = null
+let _allSessionsPromise: Promise<ParsedSession[]> | null = null
+const RESULT_CACHE_TTL = 300_000 // 5 minutes — sessions don't change mid-session
 
 export async function getAllParsedSessions(): Promise<ParsedSession[]> {
   // Return cached result if fresh
-  if (_allSessionsCache && Date.now() - _allSessionsCache.time < 60_000) {
+  if (_allSessionsCache && Date.now() - _allSessionsCache.time < RESULT_CACHE_TTL) {
     return _allSessionsCache.data
   }
 
-  let slugs: string[]
-  try {
-    slugs = await listProjectSlugs()
-  } catch {
-    return []
-  }
+  // Dedup: if already loading, wait for that promise
+  if (_allSessionsPromise) return _allSessionsPromise
+
+  _allSessionsPromise = (async () => {
+    try {
+    let slugs: string[]
+    try {
+      slugs = await listProjectSlugs()
+    } catch {
+      return []
+    }
 
   type FileEntry = { slug: string; filePath: string; sessionId: string; mtimeMs: number }
   const fileEntries: FileEntry[] = []
@@ -340,9 +347,13 @@ export async function getAllParsedSessions(): Promise<ParsedSession[]> {
     console.warn('[cc-lens] Could not load external sessions:', (err as Error).message)
   }
 
-  results.sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
-  _allSessionsCache = { data: results, time: Date.now() }
-  return results
+    results.sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
+    _allSessionsCache = { data: results, time: Date.now() }
+    return results
+    } finally { _allSessionsPromise = null }
+  })()
+
+  return _allSessionsPromise
 }
 
 /** Derive session metadata directly from ~/.claude/projects/<project>/<session>.jsonl */
